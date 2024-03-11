@@ -57,8 +57,8 @@ contract Registry {
     }
 
     function unregister() public {
-        require(configs[tx.origin].status == ConfigStatus.ACTIVE, "User is not registered")
-        delete validators[tx.origin];
+        require(configs[tx.origin].status == ConfigStatus.ACTIVE, "User is not registered");
+        delete configs[tx.origin];
         emit Unregister(tx.origin);
     }
 
@@ -68,42 +68,16 @@ contract Registry {
         configs[tx.origin].status = ConfigStatus.ACTIVE;
     }
 
-    function getClaimableAddresses(uint256 offset, uint256 batchSize) public view returns (address[] memory) {
-        address[] memory claimableAddresses;
+    function getClaimableAddresses(uint256 offset, uint256 batchSize) public view returns (address[] memory, uint256 newOffset) {
+        address[] memory claimableAddresses = new address[](batchSize);
         for (uint256 i = offset; i < offset+batchSize; i++) {
             address val = validators[i];
-            if (depositContract.withdrawableAmount(val) >= configs[val].amountThreshold) || (configs[val].timeThreshold > 0 && block.timestamp - configs[val].lastClaim >= configs[val].timeThreshold) {
-                claimableAddresses.push(validators[i]);
+            if (depositContract.withdrawableAmount(val) >= configs[val].amountThreshold)  {
+                claimableAddresses[i] = val;
+            } else if (configs[val].timeThreshold > 0 && block.timestamp - configs[val].lastClaim >= configs[val].timeThreshold) {
+                claimableAddresses[i] = val;
             }
         }
-        return claimableAddresses;
+        return (claimableAddresses, offset+batchSize);
     }
-
-    // function resolve() public view returns (bool flag, bytes memory cdata) {
-    //     address claimer;
-    //     address[] memory toPass = new address[](registeredValidators.length);
-    //     flag = false;
-    //     for (uint256 i=0; i<registeredValidators.length; i++){
-    //         claimer = registeredValidators[i];
-    //         if (claimTarget.withdrawableAmount(claimer) >= resolveThresholds[claimer]){
-    //             flag = true;
-    //             toPass[i] = claimer;
-    //         }
-    //     }
-    //     cdata = abi.encodeWithSelector(claimTarget.claimWithdrawals.selector, toPass);
-    // }
-
-    // function lazyResolver() public view returns (bool flag, bytes memory cdata) {
-    //     address claimer;
-    //     flag = false;
-    //     for (uint256 i=0; i<registeredValidators.length; i++){
-    //         claimer = registeredValidators[i];
-    //         if (claimTarget.withdrawableAmount(claimer) >= resolveThresholds[claimer]){
-    //             flag = true;
-    //             cdata = abi.encodeWithSelector(claimTarget.claimWithdrawals.selector, registeredValidators);
-    //             break;
-    //         }
-    //     }
-    // }
-
 }

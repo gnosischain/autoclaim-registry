@@ -17,8 +17,8 @@ interface ISBCDepositContract {
     function claimWithdrawals(address[] calldata _addresses) external;
     function executeSystemWithdrawals(uint256 /* _deprecatedUnused */, uint64[] calldata _amounts, address[] calldata _addresses) external;
     function executeSystemWithdrawals(uint64[] calldata _amounts, address[] calldata _addresses) external;
-    function unwrapTokens(IUnwrapper _unwrapper, IERC20 _token) external;
-
+    function unwrapTokens(address _unwrapper, address _token) external;
+    function withdrawableAmount(address _address) external view returns (uint256);
     // Supporting Interface function
     function supportsInterface(bytes4 interfaceId) external pure returns (bool);
 }

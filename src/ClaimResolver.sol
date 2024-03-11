@@ -23,23 +23,27 @@ contract ClaimResolver {
         offset = 0;
     }
 
-    function cliamBatch(address[] calldata users) public {
+    function cliamBatch(address[] calldata users, uint256 newOffset) public {
         depositContract.claimWithdrawals(users);
-        _shiftOffset();
-        ClaimBatch(msg.sender, users);
+        offset = newOffset;
+        emit ClaimBatch(msg.sender, users);
     }
 
-    // TOOD:
-    function _shiftOffset() internal {
-        if offset + batchSize >= registry.getValidatorsLength()) {
-            offset = 0;
-        } else {
-            offset += batchSize;
-        }
-    }
+
 
     function resolve() public view returns (bool flag, bytes memory cdata) {
-        address[] memory addresses = registry.getClaimableAddresses(offset, batchSize);
-        return (true, abi.encodeWithSelector(this.claimBatch.selector, addresses));
+        uint256 offsetMem = offset;
+        address[] memory addresses;
+
+        while (addresses.length == 0) {
+            (addresses, offsetMem) = registry.getClaimableAddresses(offsetMem, batchSize);
+            if (offsetMem + batchSize >= registry.getValidatorsLength()) {
+                offsetMem = 0;
+            } else {
+                offsetMem += batchSize;
+            }
+        }
+
+        return (true, abi.encodeWithSelector(this.cliamBatch.selector, addresses, offsetMem));
     }
 }
