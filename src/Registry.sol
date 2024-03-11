@@ -61,6 +61,12 @@ contract Registry {
         emit Unregister(tx.origin);
     }
 
+    function updateLastClaim(address[] calldata addresses) public {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            configs[addresses[i]].lastClaim = block.timestamp;
+        }
+    }
+
     function _setConfig(uint256 _timeThreshold, uint256 _amountThreshold) internal {
         configs[tx.origin].timeThreshold = _timeThreshold;
         configs[tx.origin].amountThreshold = _amountThreshold;
@@ -69,14 +75,28 @@ contract Registry {
 
     function getClaimableAddresses(uint256 offset, uint256 batchSize) public view returns (address[] memory, uint256 newOffset) {
         address[] memory claimableAddresses = new address[](batchSize);
-        for (uint256 i = offset; i < offset+batchSize; i++) {
+        uint256 counter = 0;
+
+        for (uint256 i = offset; i < length; i++) {
             address val = validators[i];
-            if (depositContract.withdrawableAmount(val) >= configs[val].amountThreshold)  {
-                claimableAddresses[i] = val;
-            } else if (configs[val].timeThreshold > 0 && block.timestamp - configs[val].lastClaim >= configs[val].timeThreshold) {
-                claimableAddresses[i] = val;
+            if (depositContract.withdrawableAmount(val) > configs[val].amountThreshold)  {
+                claimableAddresses[counter] = val;
+                counter++;
+            } else if (configs[val].timeThreshold > 0 && block.timestamp - configs[val].lastClaim > configs[val].timeThreshold) {
+                claimableAddresses[counter] = val;
+                counter++;
+            }
+            if claimableAddresses.length == batchSize {
+                return (claimableAddresses, i)
             }
         }
-        return (claimableAddresses, offset+batchSize);
+
+        address trimmedClaimableAddresses = new address[](counter);
+        for (uint256 i = 0; i < claimableAddresses.length; i++) {
+            if (claimableAddresses[i] != address(0)) {
+                trimmedClaimableAddresses[i] = claimableAddresses[i];
+            }
+        }
+        return (trimmedClaimableAddresses, 0);
     }
 }

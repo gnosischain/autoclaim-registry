@@ -25,6 +25,7 @@ contract ClaimResolver {
 
     function cliamBatch(address[] calldata users, uint256 newOffset) public {
         depositContract.claimWithdrawals(users);
+        registry.updateLastClaim(users);
         offset = newOffset;
         emit ClaimBatch(msg.sender, users);
     }
@@ -32,18 +33,10 @@ contract ClaimResolver {
 
 
     function resolve() public view returns (bool flag, bytes memory cdata) {
-        uint256 offsetMem = offset;
         address[] memory addresses;
 
-        while (addresses.length == 0) {
-            (addresses, offsetMem) = registry.getClaimableAddresses(offsetMem, batchSize);
-            if (offsetMem + batchSize >= registry.getValidatorsLength()) {
-                offsetMem = 0;
-            } else {
-                offsetMem += batchSize;
-            }
-        }
+        (addresses, newOffset) = registry.getClaimableAddresses(offset, batchSize);
 
-        return (true, abi.encodeWithSelector(this.cliamBatch.selector, addresses, offsetMem));
+        return (true, abi.encodeWithSelector(this.cliamBatch.selector, addresses, newOffset));
     }
 }
