@@ -38,10 +38,9 @@ contract Registry {
 }
 
     // TODO:
-    // constructor (address _claimTarget) {
-    //     //threshold = _threshold;
-    //     claimTarget = IGVC(_claimTarget);
-    // }
+    constructor (ISBCDepositContract _depositContract) {
+        depositContract = ISBCDepositContract(_depositContract);
+    }
 
     function register(uint256 _timeThreshold, uint256 _amountThreshold) public nonZeroParams(_timeThreshold, _amountThreshold) {
         _setConfig(_timeThreshold, _amountThreshold);

@@ -2,7 +2,7 @@
 pragma solidity 0.8.24;
 
 import "./interfaces/ISBCDepositContract.sol";
-import "./Registry.sol";
+import "./interfaces/IRegistry.sol";
 
 
 contract ClaimResolver {
@@ -11,14 +11,14 @@ contract ClaimResolver {
     uint256 public offset;
 
     ISBCDepositContract public depositContract;
-    Registry public registry;
+    IRegistry public registry;
 
     event ClaimBatch(address indexed caller, address[] users);
 
     // TODO:
-    constructor(ISBCDepositContract _depositContract, Registry _registry, uint256 _batchSize) {
-        depositContract = _depositContract;
-        registry = _registry;
+    constructor(ISBCDepositContract _depositContract, IRegistry _registry, uint256 _batchSize) {
+        depositContract = ISBCDepositContract(_depositContract);
+        registry = IRegistry(_registry);
         batchSize = _batchSize;
         offset = 0;
     }
