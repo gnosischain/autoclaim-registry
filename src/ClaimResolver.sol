@@ -15,7 +15,6 @@ contract ClaimResolver {
 
     event ClaimBatch(address indexed caller, address[] users);
 
-    // TODO:
     constructor(ISBCDepositContract _depositContract, IRegistry _registry, uint256 _batchSize) {
         depositContract = ISBCDepositContract(_depositContract);
         registry = IRegistry(_registry);
@@ -29,8 +28,6 @@ contract ClaimResolver {
         offset = newOffset;
         emit ClaimBatch(msg.sender, users);
     }
-
-
 
     function resolve() public view returns (bool flag, bytes memory cdata) {
         address[] memory addresses;
