@@ -4,9 +4,7 @@ pragma solidity 0.8.24;
 import "./interfaces/ISBCDepositContract.sol";
 import "./interfaces/IRegistry.sol";
 
-
 contract ClaimResolver {
-
     uint256 public batchSize;
     uint256 public offset;
 
