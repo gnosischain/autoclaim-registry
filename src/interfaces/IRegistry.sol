@@ -19,5 +19,8 @@ interface IRegistry {
     function updateConfig(uint256 _timeThreshold, uint256 _amountThreshold) external;
     function unregister() external;
     function updateLastClaim(address[] calldata addresses) external;
-    function getClaimableAddresses(uint256 offset, uint256 batchSize) external view returns (address[] memory, uint256 newOffset);
+    function getClaimableAddresses(uint256 offset, uint256 batchSize)
+        external
+        view
+        returns (address[] memory, uint256 newOffset);
 }

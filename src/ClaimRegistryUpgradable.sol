@@ -2,13 +2,12 @@
 pragma solidity 0.8.24;
 
 import "./interfaces/ISBCDepositContract.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgreadable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol"
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
-
-contract ClaimRegistryUpgradable is UUPSUpgreadable, OwnableUpgradeable, PausableUpgradeable {
+contract ClaimRegistryUpgradable is UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
     //uint256 public threshold;
     ISBCDepositContract public depositContract;
     mapping(address => Config) public configs;
@@ -48,16 +47,19 @@ contract ClaimRegistryUpgradable is UUPSUpgreadable, OwnableUpgradeable, Pausabl
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     // slither-disable-next-line missing-calls
-    constructor() initializer {}
+    constructor() {
+        _disableInitializers();
+    }
+
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     // TODO: recheck
     function initialize(address _depositContract) public initializer {
-        __Ownable_init(msg.sender);
+        __Ownable_init();
         __Pausable_init();
         __UUPSUpgradeable_init();
 
         depositContract = ISBCDepositContract(_depositContract);
-
     }
 
     function getValidatorsLength() public view returns (uint256) {
@@ -88,9 +90,10 @@ contract ClaimRegistryUpgradable is UUPSUpgreadable, OwnableUpgradeable, Pausabl
         configs[validator].lastClaim = block.timestamp;
     }
 
-    function updateConfig(uint256 _timeThreshold, uint256 _amountThreshold)
+    function updateConfig(address _withdrawalAddress, uint256 _timeThreshold, uint256 _amountThreshold)
         public
         nonZeroParams(_timeThreshold, _amountThreshold)
+        ownerOrAdmin(_withdrawalAddress)
     {
         require(configs[msg.sender].status == ConfigStatus.ACTIVE, "User is not registered");
         emit UpdateConfig(
@@ -103,7 +106,7 @@ contract ClaimRegistryUpgradable is UUPSUpgreadable, OwnableUpgradeable, Pausabl
         _setConfig(_timeThreshold, _amountThreshold);
     }
 
-    function unregister() public {
+    function unregister(address _withdrawalAddress) public ownerOrAdmin(_withdrawalAddress) {
         require(configs[msg.sender].status == ConfigStatus.ACTIVE, "User is not registered");
         delete configs[msg.sender];
         emit Unregister(msg.sender);
@@ -143,8 +146,10 @@ contract ClaimRegistryUpgradable is UUPSUpgreadable, OwnableUpgradeable, Pausabl
     }
 
     function resolve() public view returns (bool flag, bytes memory cdata) {
-        address[] memory addresses = getClaimableAddresses(0, 10);
-
+        address[] memory addresses = getClaimableAddresses();
+        if (addresses.length == 0) {
+            return (false, "");
+        }
         return (true, abi.encodeWithSelector(this.cliamBatch.selector, addresses));
     }
 }
