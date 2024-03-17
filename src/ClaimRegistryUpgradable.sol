@@ -55,7 +55,7 @@ contract ClaimRegistryUpgradable is UUPSUpgradeable, OwnableUpgradeable, Pausabl
 
     // TODO: recheck
     function initialize(address _depositContract) public initializer {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __Pausable_init();
         __UUPSUpgradeable_init();
 
@@ -72,22 +72,21 @@ contract ClaimRegistryUpgradable is UUPSUpgradeable, OwnableUpgradeable, Pausabl
         ownerOrAdmin(_withdrawalAddress)
     {
         _setConfig(_timeThreshold, _amountThreshold);
-        validators.push(msg.senger);
+        validators.push(msg.sender);
         emit Register(msg.sender);
     }
 
     // TODO: consider out of gas
     function claimBatch(address[] calldata withdrawalAddresses) public {
-        depositContract.claimWithdrawals(users);
         for (uint256 i = 0; i < withdrawalAddresses.length; i++) {
             claim(withdrawalAddresses[i]);
         }
         emit ClaimBatch(msg.sender, withdrawalAddresses);
     }
 
-    function claim(address calldata withdrawalAddress) public {
+    function claim(address withdrawalAddress) public {
         depositContract.claimWithdrawal(withdrawalAddress);
-        configs[validator].lastClaim = block.timestamp;
+        configs[withdrawalAddress].lastClaim = block.timestamp;
     }
 
     function updateConfig(address _withdrawalAddress, uint256 _timeThreshold, uint256 _amountThreshold)
@@ -123,7 +122,7 @@ contract ClaimRegistryUpgradable is UUPSUpgradeable, OwnableUpgradeable, Pausabl
         address[] memory claimableAddresses = new address[](validators.length);
         uint256 counter = 0;
 
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < validators.length; i++) {
             address val = validators[i];
             if (depositContract.withdrawableAmount(val) > configs[val].amountThreshold) {
                 claimableAddresses[counter] = val;
@@ -136,7 +135,7 @@ contract ClaimRegistryUpgradable is UUPSUpgradeable, OwnableUpgradeable, Pausabl
             }
         }
 
-        address trimmedClaimableAddresses = new address[](counter);
+        address[] memory trimmedClaimableAddresses = new address[](counter);
         for (uint256 i = 0; i < claimableAddresses.length; i++) {
             if (claimableAddresses[i] != address(0)) {
                 trimmedClaimableAddresses[i] = claimableAddresses[i];
@@ -150,6 +149,6 @@ contract ClaimRegistryUpgradable is UUPSUpgradeable, OwnableUpgradeable, Pausabl
         if (addresses.length == 0) {
             return (false, "");
         }
-        return (true, abi.encodeWithSelector(this.cliamBatch.selector, addresses));
+        return (true, abi.encodeWithSelector(this.claimBatch.selector, addresses));
     }
 }
