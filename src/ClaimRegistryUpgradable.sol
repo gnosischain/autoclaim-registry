@@ -2,10 +2,13 @@
 pragma solidity 0.8.24;
 
 import "./interfaces/ISBCDepositContract.sol";
-import "openzeppelin-contracts/contracts/access/Ownable.sol";
-import "openzeppelin-contracts/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgreadable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol"
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
-contract Registry is Ownable, Initializable {
+
+contract ClaimRegistryUpgradable is UUPSUpgreadable, OwnableUpgradeable, PausableUpgradeable {
     //uint256 public threshold;
     ISBCDepositContract public depositContract;
     mapping(address => Config) public configs;
@@ -43,14 +46,23 @@ contract Registry is Ownable, Initializable {
         _;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    // slither-disable-next-line missing-calls
+    constructor() initializer {}
+
+    // TODO: recheck
+    function initialize(address _depositContract) public initializer {
+        __Ownable_init(msg.sender);
+        __Pausable_init();
+        __UUPSUpgradeable_init();
+
+        depositContract = ISBCDepositContract(_depositContract);
+
+    }
+
     function getValidatorsLength() public view returns (uint256) {
         return validators.length;
     }
-
-    // TODO:
-    // constructor(ISBCDepositContract _depositContract) {
-    //     depositContract = ISBCDepositContract(_depositContract);
-    // }
 
     function register(address _withdrawalAddress, uint256 _timeThreshold, uint256 _amountThreshold)
         public
