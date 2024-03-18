@@ -45,8 +45,6 @@ contract ClaimRegistryUpgradable is UUPSUpgradeable, OwnableUpgradeable, Pausabl
         _;
     }
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    // slither-disable-next-line missing-calls
     constructor() {
         _disableInitializers();
     }
