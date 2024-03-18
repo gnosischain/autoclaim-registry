@@ -2,12 +2,18 @@
 pragma solidity 0.8.24;
 
 import "./interfaces/ISBCDepositContract.sol";
+import "./interfaces/IClaimRegistryUpgradable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
-contract ClaimRegistryUpgradable is UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
+contract ClaimRegistryUpgradable is
+    IClaimRegistryUpgradable,
+    UUPSUpgradeable,
+    OwnableUpgradeable,
+    PausableUpgradeable
+{
     //uint256 public threshold;
     ISBCDepositContract public depositContract;
     mapping(address => Config) public configs;
