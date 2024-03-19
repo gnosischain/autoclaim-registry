@@ -126,6 +126,9 @@ contract ClaimRegistryUpgradable is
 
         for (uint256 i = 0; i < validators.length; i++) {
             address val = validators[i];
+            if (depositContract.withdrawableAmount(val) == 0 || configs[val].status == ConfigStatus.INACTIVE) {
+                continue;
+            }
             if (depositContract.withdrawableAmount(val) > configs[val].amountThreshold) {
                 claimableAddresses[counter] = val;
                 counter++;
