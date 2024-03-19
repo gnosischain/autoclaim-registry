@@ -24,15 +24,13 @@ contract ClaimRegistryUpgradable is
         ACTIVE
     }
 
-    // Updated Config struct with an additional field for status
     struct Config {
         uint256 lastClaim;
         uint256 timeThreshold;
         uint256 amountThreshold;
-        ConfigStatus status; // New field for the status
+        ConfigStatus status;
     }
 
-    //event changedThreshold(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event Register(address indexed user);
     event Unregister(address indexed user);
     event UpdateConfig(address indexed user, uint256 oldTime, uint256 newTime, uint256 oldAmount, uint256 newAmount);
