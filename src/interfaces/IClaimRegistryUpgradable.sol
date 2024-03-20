@@ -16,6 +16,8 @@ interface IClaimRegistryUpgradable {
 
     function unregister(address _withdrawalAddress) external;
 
+    function isConfigActive(address _withdrawalAddress) external view returns (bool);
+
     function getClaimableAddresses() external view returns (address[] memory);
 
     function resolve() external view returns (bool, bytes memory);

@@ -49,6 +49,11 @@ contract ClaimRegistryUpgradable is
         _;
     }
 
+    modifier configActive(address _withdrawalAddress) {
+        require(isConfigActive(_withdrawalAddress), "Config is not active");
+        _;
+    }
+
     constructor() {
         _disableInitializers();
     }
@@ -95,8 +100,8 @@ contract ClaimRegistryUpgradable is
         public
         nonZeroParams(_timeThreshold, _amountThreshold)
         ownerOrAdmin(_withdrawalAddress)
+        configActive(_withdrawalAddress)
     {
-        require(configs[msg.sender].status == ConfigStatus.ACTIVE, "User is not registered");
         emit UpdateConfig(
             msg.sender,
             configs[msg.sender].timeThreshold,
@@ -107,8 +112,11 @@ contract ClaimRegistryUpgradable is
         _setConfig(_timeThreshold, _amountThreshold);
     }
 
-    function unregister(address _withdrawalAddress) public ownerOrAdmin(_withdrawalAddress) {
-        require(configs[msg.sender].status == ConfigStatus.ACTIVE, "User is not registered");
+    function unregister(address _withdrawalAddress)
+        public
+        ownerOrAdmin(_withdrawalAddress)
+        configActive(_withdrawalAddress)
+    {
         delete configs[msg.sender];
         emit Unregister(msg.sender);
     }
@@ -117,6 +125,10 @@ contract ClaimRegistryUpgradable is
         configs[msg.sender].timeThreshold = _timeThreshold;
         configs[msg.sender].amountThreshold = _amountThreshold;
         configs[msg.sender].status = ConfigStatus.ACTIVE;
+    }
+
+    function isConfigActive(address _withdrawalAddress) public view returns (bool) {
+        return configs[_withdrawalAddress].status == ConfigStatus.ACTIVE;
     }
 
     // TODO: consider offset shifting option for huge validators set
