@@ -21,6 +21,12 @@ forge script script/Deploy.s.sol:DeployClaimRegistryUpgradable --rpc-url $GNOSIS
 
 
 
+### Deployed contracts
+
+| Name  | Gnosis Mainnet |
+| ------------- | ------------- |
+| ERC1967 Proxy  | [0xB11796Aa856762DBa6B9d42EA71d2C8D7f85a3e1](https://gnosisscan.io/address/0xB11796Aa856762DBa6B9d42EA71d2C8D7f85a3e1#code)  |
+| ClaimRegistryUpgradable  | [0xd08ef4080306d3222e6d6324095a0daa779c0e95](https://gnosisscan.io/address/0xd08ef4080306d3222e6d6324095a0daa779c0e95#code)  |
 
 
 ### Foundry Usage
