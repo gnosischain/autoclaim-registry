@@ -177,9 +177,9 @@ contract ClaimRegistryUpgradable is
         nonZeroParams(_timeThreshold, _amountThreshold)
         ownerOrAdmin(_withdrawalAddress)
     {
-        _setConfig(_timeThreshold, _amountThreshold);
-        validators.push(msg.sender);
-        emit Register(msg.sender);
+        _setConfig(_withdrawalAddress, _timeThreshold, _amountThreshold);
+        validators.push(_withdrawalAddress);
+        emit Register(_withdrawalAddress);
     }
 
     /**
@@ -194,14 +194,14 @@ contract ClaimRegistryUpgradable is
         ownerOrAdmin(_withdrawalAddress)
         configActive(_withdrawalAddress)
     {
+        _setConfig(_withdrawalAddress, _timeThreshold, _amountThreshold);
         emit UpdateConfig(
-            msg.sender,
-            configs[msg.sender].timeThreshold,
+            _withdrawalAddress,
+            configs[_withdrawalAddress].timeThreshold,
             _timeThreshold,
-            configs[msg.sender].amountThreshold,
+            configs[_withdrawalAddress].amountThreshold,
             _amountThreshold
         );
-        _setConfig(_timeThreshold, _amountThreshold);
     }
 
     /**
@@ -213,8 +213,8 @@ contract ClaimRegistryUpgradable is
         ownerOrAdmin(_withdrawalAddress)
         configActive(_withdrawalAddress)
     {
-        delete configs[msg.sender];
-        emit Unregister(msg.sender);
+        delete configs[_withdrawalAddress];
+        emit Unregister(_withdrawalAddress);
     }
 
     /**
@@ -245,9 +245,9 @@ contract ClaimRegistryUpgradable is
      * @param _timeThreshold Time threshold for withdrawal.
      * @param _amountThreshold Amount threshold for withdrawal.
      */
-    function _setConfig(uint256 _timeThreshold, uint256 _amountThreshold) internal {
-        configs[msg.sender].timeThreshold = _timeThreshold;
-        configs[msg.sender].amountThreshold = _amountThreshold;
-        configs[msg.sender].status = ConfigStatus.ACTIVE;
+    function _setConfig(address _withdrawalAddress, uint256 _timeThreshold, uint256 _amountThreshold) internal {
+        configs[_withdrawalAddress].timeThreshold = _timeThreshold;
+        configs[_withdrawalAddress].amountThreshold = _amountThreshold;
+        configs[_withdrawalAddress].status = ConfigStatus.ACTIVE;
     }
 }
