@@ -19,18 +19,6 @@ contract ClaimRegistryUpgradable is
     PausableUpgradeable
 {
     // State variables
-
-    // Public variables
-
-    // Events
-
-    // Modifiers
-
-    //uint256 public threshold;
-    ISBCDepositContract public depositContract;
-    mapping(address => Config) public configs;
-    address[] public validators;
-
     enum ConfigStatus {
         INACTIVE,
         ACTIVE
@@ -43,12 +31,19 @@ contract ClaimRegistryUpgradable is
         ConfigStatus status;
     }
 
+    // Public variables
+    ISBCDepositContract public depositContract;
+    mapping(address => Config) public configs;
+    address[] public validators;
+
+    // Events
     event Register(address indexed user);
     event Unregister(address indexed user);
     event UpdateConfig(address indexed user, uint256 oldTime, uint256 newTime, uint256 oldAmount, uint256 newAmount);
     // TODO: decidew if we want many single Claim events or one ClaimBatch event
     event ClaimBatch(address indexed caller, address[] withdrawalAddresses);
 
+    // Modifiers
     modifier nonZeroParams(uint256 _timeThreshold, uint256 _amountThreshold) {
         require(_timeThreshold > 0 || _amountThreshold > 0, "One of thresholds should be non-zero");
         _;
@@ -93,7 +88,7 @@ contract ClaimRegistryUpgradable is
      * @dev Ensures that only owner can upgrade the implementation.
      * @param newImplementation Address of the new implementation.
      */
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // External functions
 
@@ -113,7 +108,7 @@ contract ClaimRegistryUpgradable is
     /**
      * @dev Gets the claimable addresses based on configured thresholds.
      * @return claimableAddresses Array of claimable addresses.
-     * @todo Consider offset shifting option for huge validators set.
+     * @notice TODO: Consider offset shifting option for huge validators set.
      */
     function getClaimableAddresses() public view returns (address[] memory) {
         address[] memory claimableAddresses = new address[](validators.length);
@@ -138,7 +133,7 @@ contract ClaimRegistryUpgradable is
             }
         }
 
-        if counter != validators.length {
+        if (counter != validators.length) {
             // as we used new address[](validators.length); we have to trim array to remove zero addresses
             // since we can't resize array in memory, we need to create new one where we will copy all non-zero addresses
             address[] memory trimmedClaimableAddresses = new address[](counter);
@@ -225,7 +220,7 @@ contract ClaimRegistryUpgradable is
     /**
      * @dev Allows batch claiming for multiple withdrawal addresses.
      * @param withdrawalAddresses Array of withdrawal addresses.
-     * @todo Consider offset shifting option for huge validators set to not get 'out of gas' error
+     * @notice TODO: Consider offset shifting option for huge validators set to not get 'out of gas' error
      */
     function claimBatch(address[] calldata withdrawalAddresses) public {
         for (uint256 i = 0; i < withdrawalAddresses.length; i++) {
