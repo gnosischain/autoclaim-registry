@@ -25,7 +25,7 @@ forge script script/Deploy.s.sol:DeployClaimRegistryUpgradable --rpc-url $GNOSIS
 forge doc --serve --port 4000
 ```
 
-### Deployed contracts
+## Deployed contracts
 
 | Name  | Gnosis Mainnet |
 | ------------- | ------------- |
@@ -33,7 +33,7 @@ forge doc --serve --port 4000
 | ClaimRegistryUpgradable  | [0xd08ef4080306d3222e6d6324095a0daa779c0e95](https://gnosisscan.io/address/0xd08ef4080306d3222e6d6324095a0daa779c0e95#code)  |
 
 
-### Claim automation flow
+## Claim automation flow
 PowerPools is a decentralized network of keepers for automatic transaction execution.
 
 <img width="1292" alt="image" src="https://github.com/gnosischain/autoclaim-registry/assets/59182467/cd04b7e7-4448-4a9e-a719-e0dd2075de53">
