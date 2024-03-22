@@ -29,6 +29,45 @@ forge script script/Deploy.s.sol:DeployClaimRegistryUpgradable --rpc-url $GNOSIS
 | ClaimRegistryUpgradable  | [0xd08ef4080306d3222e6d6324095a0daa779c0e95](https://gnosisscan.io/address/0xd08ef4080306d3222e6d6324095a0daa779c0e95#code)  |
 
 
+### Claim automation flow
+PowerPools is a decentralized network of keepers for automatic transaction execution.
+
+<img width="1292" alt="image" src="https://github.com/gnosischain/autoclaim-registry/assets/59182467/cd04b7e7-4448-4a9e-a719-e0dd2075de53">
+
+#### Steps:
+1. Assigned keeper calls `resolve()` view function
+```solidity
+    function resolve() public view returns (bool flag, bytes memory cdata) {
+        address[] memory addresses = getClaimableAddresses();
+        if (addresses.length == 0) {
+            return (false, "");
+        }
+        return (true, abi.encodeWithSelector(this.claimBatch.selector, addresses));
+    }
+```
+
+2. Registry contract returns list of addresses that meet sertain conditions to withdraw (time/GNO amount threshold) in a form `(true, calldata)`, otherwise (if there are no such addresses) returns `(false, " ")`
+
+3. If `(true, calldata)` returned, assigned keeper execute `claimBatch(calldata)` call
+
+4. Registry updates `lastClaim` time for addresses and calls `claim()` on deposit contract
+```solidity
+    function claimBatch(address[] calldata withdrawalAddresses) public {
+        for (uint256 i = 0; i < withdrawalAddresses.length; i++) {
+            claim(withdrawalAddresses[i]);
+        }
+        emit ClaimBatch(msg.sender, withdrawalAddresses);
+    }
+
+    function claim(address withdrawalAddress) public {
+        configs[withdrawalAddress].lastClaim = block.timestamp;
+        depositContract.claimWithdrawal(withdrawalAddress);
+    }
+```
+
+
+
+
 ### Foundry Usage
 
 #### Build
