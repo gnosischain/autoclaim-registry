@@ -50,7 +50,7 @@ PowerPools is a decentralized network of keepers for automatic transaction execu
     }
 ```
 
-1. Registry contract returns list of addresses that meet certain conditions(exceed time/amount threshold) to withdraw in a form `(true, calldata)`, otherwise (if there are no such addresses) returns `(false, " ")`
+1. Registry contract returns list of addresses that meet certain conditions(time/amount threshold exceeded) to withdraw in a form `(true, calldata)`, otherwise (if there are no such addresses) returns `(false, " ")`
 
 2. If `(true, calldata)` returned, assigned keeper execute `claimBatch(calldata)` call
 
