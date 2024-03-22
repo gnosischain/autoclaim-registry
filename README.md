@@ -19,7 +19,11 @@ cp .env.example .env
 forge script script/Deploy.s.sol:DeployClaimRegistryUpgradable --rpc-url $GNOSIS_RPC_URL --broadcast --etherscan-api-key $ETHERSCAN_API_KEY --verify --watch
 ```
 
+### Docs
 
+```shell
+forge doc --serve --port 4000
+```
 
 ### Deployed contracts
 
