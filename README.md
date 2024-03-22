@@ -50,11 +50,11 @@ PowerPools is a decentralized network of keepers for automatic transaction execu
     }
 ```
 
-2. Registry contract returns list of addresses that meet sertain conditions to withdraw (time/GNO amount threshold) in a form `(true, calldata)`, otherwise (if there are no such addresses) returns `(false, " ")`
+1. Registry contract returns list of addresses that meet certain conditions(exceed time/amount threshold) to withdraw in a form `(true, calldata)`, otherwise (if there are no such addresses) returns `(false, " ")`
 
-3. If `(true, calldata)` returned, assigned keeper execute `claimBatch(calldata)` call
+2. If `(true, calldata)` returned, assigned keeper execute `claimBatch(calldata)` call
 
-4. Registry updates `lastClaim` time for addresses and calls `claim()` on deposit contract
+3. Registry updates `lastClaim` time for addresses and calls deposit contract `claim()` function
 ```solidity
     function claimBatch(address[] calldata withdrawalAddresses) public {
         for (uint256 i = 0; i < withdrawalAddresses.length; i++) {
