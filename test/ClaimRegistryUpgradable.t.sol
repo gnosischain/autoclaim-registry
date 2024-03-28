@@ -119,7 +119,7 @@ contract ClaimRegistryUpgradableTest is Test {
                 uint256 gasUsed = oldGas - gasleft();
 
                 i += 50;
-                if (oldGas - gasleft() > 29000000) {
+                if (gasUsed > 29000000) {
                     console.log("OutOfGas bound is around", i, "addresses");
                     break;
                 }

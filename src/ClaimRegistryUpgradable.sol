@@ -7,16 +7,11 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-
 /**
  * @title ClaimRegistryUpgradable
  * @dev A contract for managing claim registrations and withdrawals with upgradability features.
  */
-contract ClaimRegistryUpgradable is
-    IClaimRegistryUpgradable,
-    UUPSUpgradeable,
-    OwnableUpgradeable,
-{
+contract ClaimRegistryUpgradable is IClaimRegistryUpgradable, UUPSUpgradeable, OwnableUpgradeable {
     // State variables
     enum ConfigStatus {
         INACTIVE,
