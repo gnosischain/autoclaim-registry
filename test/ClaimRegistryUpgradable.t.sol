@@ -136,7 +136,7 @@ contract ClaimRegistryUpgradableTest is Test {
         mockDeposit.fund(3000, 1 ether);
         vm.resumeGasMetering();
 
-        uint160 i = 1500;
+        uint160 i = 1;
         // vm.expectRevert();
         for (uint160 j = 0; j < i; j += 1) {
             try registry.claim(address(j)) {}

@@ -6,7 +6,7 @@ import "./interfaces/IClaimRegistryUpgradable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+
 
 /**
  * @title ClaimRegistryUpgradable
@@ -16,7 +16,6 @@ contract ClaimRegistryUpgradable is
     IClaimRegistryUpgradable,
     UUPSUpgradeable,
     OwnableUpgradeable,
-    PausableUpgradeable
 {
     // State variables
     enum ConfigStatus {
@@ -78,7 +77,6 @@ contract ClaimRegistryUpgradable is
      */
     function initialize(address _depositContract) public initializer {
         __Ownable_init(msg.sender);
-        __Pausable_init();
         __UUPSUpgradeable_init();
 
         depositContract = ISBCDepositContract(_depositContract);
