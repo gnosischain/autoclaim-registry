@@ -40,38 +40,3 @@ forge doc --serve --port 4000
 | ClaimRegistryUpgradeable (implementation) | [0x72f93d713b45090573ea6699df64c0d13f625d29](https://gnosisscan.io/address/0x72f93d713b45090573ea6699df64c0d13f625d29#code)  |
 
 
-## Claim automation flow
-PowerPools is a decentralized network of keepers for automatic transaction execution.
-
-<img width="1292" alt="image" src="https://github.com/gnosischain/autoclaim-registry/assets/59182467/cd04b7e7-4448-4a9e-a719-e0dd2075de53">
-
-#### Steps:
-1. Assigned keeper calls `resolve()` view function
-```solidity
-    function resolve() public view returns (bool flag, bytes memory cdata) {
-        address[] memory addresses = getClaimableAddresses();
-        if (addresses.length == 0) {
-            return (false, "");
-        }
-        return (true, abi.encodeWithSelector(this.claimBatch.selector, addresses));
-    }
-```
-
-1. Registry contract returns list of addresses that meet certain conditions(time/amount threshold exceeded) to withdraw in a form `(true, calldata)`, otherwise (if there are no such addresses) returns `(false, " ")`
-
-2. If `(true, calldata)` returned, assigned keeper execute `claimBatch(calldata)` call
-
-3. Registry updates `lastClaim` time for addresses and calls deposit contract `claim()` function
-```solidity
-    function claimBatch(address[] calldata withdrawalAddresses) public {
-        for (uint256 i = 0; i < withdrawalAddresses.length; i++) {
-            claim(withdrawalAddresses[i]);
-        }
-        emit ClaimBatch(msg.sender, withdrawalAddresses);
-    }
-
-    function claim(address withdrawalAddress) public {
-        configs[withdrawalAddress].lastClaim = block.timestamp;
-        depositContract.claimWithdrawal(withdrawalAddress);
-    }
-```
