@@ -34,8 +34,8 @@ forge doc --serve --port 4000
 
 | Name  | Gnosis Mainnet |
 | ------------- | ------------- |
-| ERC1967 Proxy  | [0x8cb7C925d231f3355560F6D4D880c132B61C4083](https://gnosisscan.io/address/0x8cb7c925d231f3355560f6d4d880c132b61c4083#code)  |
-| ClaimRegistryUpgradeable (implementation) | [0x89ab85199492d2bb8100fbb5f7055f5e03c83680](https://gnosisscan.io/address/0x89ab85199492d2bb8100fbb5f7055f5e03c83680#code)  |
+| ERC1967 Proxy  | [0xde674390d697e0998ec095d02472fbc1daa26ccb](https://gnosisscan.io/address/0xde674390d697e0998ec095d02472fbc1daa26ccb#code)  |
+| ClaimRegistryUpgradeable (implementation) | [0x72f93d713b45090573ea6699df64c0d13f625d29](https://gnosisscan.io/address/0x72f93d713b45090573ea6699df64c0d13f625d29#code)  |
 
 
 ## Claim automation flow
