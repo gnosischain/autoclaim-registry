@@ -21,7 +21,9 @@ cp .env.example .env
 ### Deploy
 
 ```shell
-forge script script/Deploy.s.sol:DeployClaimRegistryUpgradeable --rpc-url $GNOSIS_RPC_URL --broadcast --etherscan-api-key $ETHERSCAN_API_KEY --verify --watch
+source .env
+
+forge script script/Deploy.s.sol:Deploy --rpc-url $GNOSIS_RPC_URL --broadcast --etherscan-api-key $ETHERSCAN_API_KEY --verify --watch
 ```
 
 ### Docs

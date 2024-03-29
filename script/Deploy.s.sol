@@ -6,7 +6,7 @@ import {ClaimRegistryUpgradeable} from "../src/ClaimRegistryUpgradeable.sol";
 import {ClaimRegistryProxy} from "../src/ClaimRegistryProxy.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-contract DeployClaimRegistryUpgradeable is Script {
+contract Deploy is Script {
     ClaimRegistryUpgradeable registry;
     address _depositContract = 0x0B98057eA310F4d31F2a452B414647007d1645d9;
 
