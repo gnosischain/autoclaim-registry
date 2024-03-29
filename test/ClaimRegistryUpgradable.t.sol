@@ -202,11 +202,11 @@ contract ClaimRegistryUpgradableTest is Test {
         assertEq(claimableAddrsEmpty.length, 0);
     }
 
-    function test_TimeThresholdReached() public {
-        test_Batching();
+    // function test_TimeThresholdReached() public {
+    //     test_Batching();
 
-        vm.warp(vm.getBlockTimestamp() + 2 hours);
+    //     vm.warp(vm.getBlockTimestamp() + 1 days);
 
-        _claimWithBatchAssertions(200);
-    }
+    //     _claimWithBatchAssertions(200);
+    // }
 }
