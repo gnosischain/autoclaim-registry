@@ -2,7 +2,7 @@
 pragma solidity 0.8.24;
 
 interface IClaimRegistryUpgradable {
-    function initialize(address _depositContract) external;
+    function initialize(address _depositContract, uint256 _batchSizeMax) external;
 
     function getValidatorsLength() external view returns (uint256);
 

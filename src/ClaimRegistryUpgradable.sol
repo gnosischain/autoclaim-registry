@@ -30,6 +30,8 @@ contract ClaimRegistryUpgradable is IClaimRegistryUpgradable, UUPSUpgradeable, O
     mapping(address => Config) public configs;
     address[] public validators;
 
+    uint256 public batchSizeMax;
+
     // Events
     event Register(address indexed user);
     event Unregister(address indexed user);
@@ -70,10 +72,11 @@ contract ClaimRegistryUpgradable is IClaimRegistryUpgradable, UUPSUpgradeable, O
      * @dev Initializes the proxy contract, intended to be called only once.
      * @param _depositContract Address of the deposit contract.
      */
-    function initialize(address _depositContract) public initializer {
+    function initialize(address _depositContract, uint256 _batchSizeMax) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
 
+        batchSizeMax = _batchSizeMax;
         depositContract = ISBCDepositContract(_depositContract);
     }
 
@@ -115,14 +118,18 @@ contract ClaimRegistryUpgradable is IClaimRegistryUpgradable, UUPSUpgradeable, O
                 continue;
             }
             // add address to list if amount or time condition met
-            if (withdrawableAmount > configs[val].amountThreshold) {
-                claimableAddresses[counter] = val;
-                counter++;
-            } else if (
-                configs[val].timeThreshold > 0 && block.timestamp - configs[val].lastClaim > configs[val].timeThreshold
+            if (
+                (withdrawableAmount > configs[val].amountThreshold)
+                    || (
+                        configs[val].timeThreshold > 0
+                            && block.timestamp - configs[val].lastClaim > configs[val].timeThreshold
+                    )
             ) {
                 claimableAddresses[counter] = val;
                 counter++;
+                if (counter == batchSizeMax) {
+                    break;
+                }
             }
         }
 

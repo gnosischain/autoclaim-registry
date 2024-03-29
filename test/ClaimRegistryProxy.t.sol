@@ -17,7 +17,7 @@ contract ClaimRegistryProxyTest is Test {
         ClaimRegistryUpgradable impl = new ClaimRegistryUpgradable();
         proxy = new ERC1967Proxy(address(impl), "");
         registry = ClaimRegistryUpgradable(address(proxy));
-        registry.initialize(_depositContract);
+        registry.initialize(_depositContract, 100);
     }
 
     // function test_UpgradeImplementation() public {

@@ -14,6 +14,8 @@ contract ClaimRegistryUpgradableTest is Test {
 
     MockSBCDepositContract mockDeposit;
 
+    uint256 public constant BATCH_SIZE_MAX = 100;
+
     address val1 = address(1);
     address val2 = address(2);
     address val3 = address(3);
@@ -25,7 +27,7 @@ contract ClaimRegistryUpgradableTest is Test {
         ClaimRegistryUpgradable impl = new ClaimRegistryUpgradable();
         ERC1967Proxy proxy = new ERC1967Proxy(address(impl), "");
         registry = ClaimRegistryUpgradable(address(proxy));
-        registry.initialize(_depositContractAddress);
+        registry.initialize(_depositContractAddress, BATCH_SIZE_MAX);
 
         assertEq(address(registry.depositContract()), address(_depositContractAddress));
     }
@@ -145,5 +147,55 @@ contract ClaimRegistryUpgradableTest is Test {
                 break;
             }
         }
+    }
+
+    function test_Batching() public {
+        uint160 accounts = 200;
+
+        vm.broadcast(val1);
+        mockDeposit.fund(accounts, 2 ether);
+
+        for (uint160 i = 0; i < accounts; i++) {
+            vm.prank(address(i));
+            registry.register(address(i), 1 hours, 1 ether);
+        }
+
+        _claimWithBatchAssertions(accounts);
+    }
+
+    function _claimWithBatchAssertions(uint160 addresses) private {
+        if (uint256(addresses) < BATCH_SIZE_MAX) {
+            address[] memory claimableAddrs = registry.getClaimableAddresses();
+            vm.broadcast(val1);
+            registry.claimBatch(claimableAddrs);
+            return;
+        }
+        for (uint160 i = 0; i < addresses / BATCH_SIZE_MAX; i++) {
+            address[] memory claimableAddrs = registry.getClaimableAddresses();
+            assertEq(claimableAddrs.length, registry.batchSizeMax());
+            // assertEq(claimableAddrs[0], address(uint160(i * BATCH_SIZE_MAX)));
+
+            vm.broadcast(val1);
+            registry.claimBatch(claimableAddrs);
+        }
+
+        if (addresses % BATCH_SIZE_MAX != 0) {
+            address[] memory claimableAddrs = registry.getClaimableAddresses();
+            assertEq(claimableAddrs.length, addresses % BATCH_SIZE_MAX);
+
+            vm.broadcast(val1);
+            registry.claimBatch(claimableAddrs);
+        }
+
+        address[] memory claimableAddrsEmpty = registry.getClaimableAddresses();
+        assertEq(claimableAddrsEmpty.length, 0);
+    }
+
+    function test_TimeThresholdReached() public {
+        test_Batching();
+
+        vm.warp(vm.getBlockTimestamp() + 2 hours);
+
+        _claimWithBatchAssertions(200);
     }
 }
