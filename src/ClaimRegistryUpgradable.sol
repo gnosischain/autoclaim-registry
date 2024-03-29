@@ -6,6 +6,7 @@ import "./interfaces/IClaimRegistryUpgradable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
 
 /**
  * @title ClaimRegistryUpgradable
@@ -86,6 +87,13 @@ contract ClaimRegistryUpgradable is IClaimRegistryUpgradable, UUPSUpgradeable, O
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
+    /**
+     * @dev Compliments the ERC1967 pattern make implementation address retrievable.
+     * @return address of implementation contract.
+     */
+    function implementation() public view returns (address) {
+        return ERC1967Utils.getImplementation();
+    }
     // External functions
 
     /**

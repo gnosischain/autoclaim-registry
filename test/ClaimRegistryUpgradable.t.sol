@@ -10,7 +10,9 @@ import {MockSBCDepositContract} from "./Mocks.sol";
 
 contract ClaimRegistryUpgradableTest is Test {
     ClaimRegistryUpgradable registry;
+
     address _depositContractAddress;
+    address _implementation;
 
     MockSBCDepositContract mockDeposit;
 
@@ -25,11 +27,20 @@ contract ClaimRegistryUpgradableTest is Test {
         _depositContractAddress = address(mockDeposit);
 
         ClaimRegistryUpgradable impl = new ClaimRegistryUpgradable();
-        ERC1967Proxy proxy = new ERC1967Proxy(address(impl), "");
+        _implementation = address(impl);
+
+        ERC1967Proxy proxy = new ERC1967Proxy(_implementation, "");
         registry = ClaimRegistryUpgradable(address(proxy));
         registry.initialize(_depositContractAddress, BATCH_SIZE_MAX);
 
         assertEq(address(registry.depositContract()), address(_depositContractAddress));
+        assertEq(registry.batchSizeMax(), BATCH_SIZE_MAX);
+
+        test_GetImplimentation();
+    }
+
+    function test_GetImplimentation() public {
+        assertEq(registry.implementation(), _implementation);
     }
 
     function test_Register() public {
