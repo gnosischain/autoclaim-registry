@@ -174,6 +174,10 @@ contract ClaimRegistryUpgradable is IClaimRegistryUpgradable, UUPSUpgradeable, O
         return configs[_withdrawalAddress].status == ConfigStatus.ACTIVE;
     }
 
+    function setBatchSizeMax(uint256 size) public onlyOwner {
+        batchSizeMax = size;
+    }
+
     /**
      * @dev Registers a user with withdrawal credentials.
      * @param _withdrawalAddress The address to register for withdrawals.
