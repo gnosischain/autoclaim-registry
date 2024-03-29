@@ -2,17 +2,18 @@
 pragma solidity 0.8.24;
 
 import "./interfaces/ISBCDepositContract.sol";
-import "./interfaces/IClaimRegistryUpgradable.sol";
+import "./interfaces/IClaimRegistryUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
 
 /**
- * @title ClaimRegistryUpgradable
- * @dev A contract for managing claim registrations and withdrawals with upgradability features.
+ * @title ClaimRegistryLogic
+ * @dev A contract for managing claim registrations and withdrawals for validators.
+ * Contains only application specific logic, not upgradeability.
  */
-contract ClaimRegistryUpgradable is IClaimRegistryUpgradable, UUPSUpgradeable, OwnableUpgradeable {
+contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable, OwnableUpgradeable {
     // State variables
     enum ConfigStatus {
         INACTIVE,
@@ -59,7 +60,6 @@ contract ClaimRegistryUpgradable is IClaimRegistryUpgradable, UUPSUpgradeable, O
     }
 
     // Constructor
-
     /**
      * @dev Disable implementaton contract initializers
      */
@@ -77,8 +77,8 @@ contract ClaimRegistryUpgradable is IClaimRegistryUpgradable, UUPSUpgradeable, O
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
 
-        batchSizeMax = _batchSizeMax;
         depositContract = ISBCDepositContract(_depositContract);
+        batchSizeMax = _batchSizeMax;
     }
 
     /**
@@ -94,6 +94,7 @@ contract ClaimRegistryUpgradable is IClaimRegistryUpgradable, UUPSUpgradeable, O
     function implementation() public view returns (address) {
         return ERC1967Utils.getImplementation();
     }
+
     // External functions
 
     /**

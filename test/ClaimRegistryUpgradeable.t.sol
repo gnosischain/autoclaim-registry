@@ -4,12 +4,12 @@ pragma solidity 0.8.24;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-import {ClaimRegistryUpgradable} from "../src/ClaimRegistryUpgradable.sol";
+import {ClaimRegistryUpgradeable} from "../src/ClaimRegistryUpgradeable.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {MockSBCDepositContract} from "./Mocks.sol";
 
-contract ClaimRegistryUpgradableTest is Test {
-    ClaimRegistryUpgradable registry;
+contract ClaimRegistryUpgradeableTest is Test {
+    ClaimRegistryUpgradeable registry;
 
     address _depositContractAddress;
     address _implementation;
@@ -26,11 +26,11 @@ contract ClaimRegistryUpgradableTest is Test {
         mockDeposit = new MockSBCDepositContract();
         _depositContractAddress = address(mockDeposit);
 
-        ClaimRegistryUpgradable impl = new ClaimRegistryUpgradable();
+        ClaimRegistryUpgradeable impl = new ClaimRegistryUpgradeable();
         _implementation = address(impl);
 
         ERC1967Proxy proxy = new ERC1967Proxy(_implementation, "");
-        registry = ClaimRegistryUpgradable(address(proxy));
+        registry = ClaimRegistryUpgradeable(address(proxy));
         registry.initialize(_depositContractAddress, BATCH_SIZE_MAX);
 
         assertEq(address(registry.depositContract()), address(_depositContractAddress));
@@ -108,8 +108,8 @@ contract ClaimRegistryUpgradableTest is Test {
         registry.unregister(val1);
 
         // Check if the validator is unregistered
-        (,,, ClaimRegistryUpgradable.ConfigStatus status) = registry.configs(val1);
-        assertEq(uint256(status), uint256(ClaimRegistryUpgradable.ConfigStatus.INACTIVE));
+        (,,, ClaimRegistryUpgradeable.ConfigStatus status) = registry.configs(val1);
+        assertEq(uint256(status), uint256(ClaimRegistryUpgradeable.ConfigStatus.INACTIVE));
     }
 
     function test_ClaimBatchGasEstimation() public {

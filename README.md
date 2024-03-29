@@ -21,7 +21,7 @@ cp .env.example .env
 ### Deploy
 
 ```shell
-forge script script/Deploy.s.sol:DeployClaimRegistryUpgradable --rpc-url $GNOSIS_RPC_URL --broadcast --etherscan-api-key $ETHERSCAN_API_KEY --verify --watch
+forge script script/Deploy.s.sol:DeployClaimRegistryUpgradeable --rpc-url $GNOSIS_RPC_URL --broadcast --etherscan-api-key $ETHERSCAN_API_KEY --verify --watch
 ```
 
 ### Docs
@@ -35,7 +35,7 @@ forge doc --serve --port 4000
 | Name  | Gnosis Mainnet |
 | ------------- | ------------- |
 | ERC1967 Proxy  | [0x8cb7C925d231f3355560F6D4D880c132B61C4083](https://gnosisscan.io/address/0x8cb7c925d231f3355560f6d4d880c132b61c4083#code)  |
-| ClaimRegistryUpgradable (implementation) | [0x89ab85199492d2bb8100fbb5f7055f5e03c83680](https://gnosisscan.io/address/0x89ab85199492d2bb8100fbb5f7055f5e03c83680#code)  |
+| ClaimRegistryUpgradeable (implementation) | [0x89ab85199492d2bb8100fbb5f7055f5e03c83680](https://gnosisscan.io/address/0x89ab85199492d2bb8100fbb5f7055f5e03c83680#code)  |
 
 
 ## Claim automation flow

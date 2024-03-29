@@ -2,28 +2,28 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {ClaimRegistryUpgradable} from "../src/ClaimRegistryUpgradable.sol";
+import {ClaimRegistryUpgradeable} from "../src/ClaimRegistryUpgradeable.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract ClaimRegistryProxyTest is Test {
     address _depositContract = 0x0B98057eA310F4d31F2a452B414647007d1645d9;
 
-    ClaimRegistryUpgradable registry;
+    ClaimRegistryUpgradeable registry;
     ERC1967Proxy proxy;
 
     address newImplAddress;
 
     function setUp() public {
-        ClaimRegistryUpgradable impl = new ClaimRegistryUpgradable();
+        ClaimRegistryUpgradeable impl = new ClaimRegistryUpgradeable();
         proxy = new ERC1967Proxy(address(impl), "");
-        registry = ClaimRegistryUpgradable(address(proxy));
+        registry = ClaimRegistryUpgradeable(address(proxy));
         registry.initialize(_depositContract, 100);
     }
 
     // function test_UpgradeImplementation() public {
     //     // Upgrade the proxy to the new implementation
     //     // vm.prank(address(proxy.getAdmin()));
-    //     newImplAddress = address(new ClaimRegistryUpgradable());
+    //     newImplAddress = address(new ClaimRegistryUpgradeable());
     //     registry.upgradeToAndCall(newImplAddress, "");
 
     //     // Check if the proxy address is updated
