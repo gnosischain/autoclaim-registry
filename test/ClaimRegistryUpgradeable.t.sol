@@ -202,11 +202,28 @@ contract ClaimRegistryUpgradeableTest is Test {
         assertEq(claimableAddrsEmpty.length, 0);
     }
 
-    // function test_TimeThresholdReached() public {
-    //     test_Batching();
+    function test_GetClaimableAddresses() public {
+        vm.pauseGasMetering();
+        mockDeposit.fund(3000, 1 ether);
+        vm.resumeGasMetering();
 
-    //     vm.warp(vm.getBlockTimestamp() + 1 days);
+        uint160 accounts = 100;
+        uint160 claimableAccs = 10;
 
-    //     _claimWithBatchAssertions(200);
-    // }
+        for (uint160 i = 0; i < accounts; i++) {
+            vm.prank(address(i));
+            registry.register(address(i), 10 hours, 10 ether);
+        }
+
+        for (uint160 i = 0; i < claimableAccs; i++) {
+            address acc = address(i + 101);
+            vm.broadcast(acc);
+            registry.register(acc, 1 hours, 0);
+        }
+
+        vm.warp(2 hours);
+
+        address[] memory claimableAddrs = registry.getClaimableAddresses();
+        assertEq(claimableAddrs.length, claimableAccs);
+    }
 }

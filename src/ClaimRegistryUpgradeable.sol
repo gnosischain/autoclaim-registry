@@ -116,7 +116,7 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      * @notice TODO: Consider offset shifting option for huge validators set.
      */
     function getClaimableAddresses() public view returns (address[] memory) {
-        address[] memory claimableAddresses = new address[](validators.length);
+        address[] memory claimableAddresses = new address[](batchSizeMax);
         uint256 counter = 0;
 
         for (uint256 i = 0; i < validators.length; i++) {
@@ -142,17 +142,11 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
             }
         }
 
-        if (counter != validators.length) {
-            // as we used new address[](validators.length); we have to trim array to remove zero addresses
-            // since we can't resize array in memory, we need to create new one where we will copy all non-zero addresses
-            address[] memory trimmedClaimableAddresses = new address[](counter);
-            for (uint256 i = 0; i < claimableAddresses.length; i++) {
-                if (claimableAddresses[i] != address(0)) {
-                    trimmedClaimableAddresses[i] = claimableAddresses[i];
-                }
-            }
-            return trimmedClaimableAddresses;
+        // trim an array to the actual size
+        assembly {
+            mstore(claimableAddresses, counter)
         }
+
         return claimableAddresses;
     }
 
