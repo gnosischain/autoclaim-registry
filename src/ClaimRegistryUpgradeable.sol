@@ -202,7 +202,6 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
         ownerOrAdmin(_withdrawalAddress)
         configActive(_withdrawalAddress)
     {
-        _setConfig(_withdrawalAddress, _timeThreshold, _amountThreshold);
         emit UpdateConfig(
             _withdrawalAddress,
             configs[_withdrawalAddress].timeThreshold,
@@ -210,6 +209,7 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
             configs[_withdrawalAddress].amountThreshold,
             _amountThreshold
         );
+        _setConfig(_withdrawalAddress, _timeThreshold, _amountThreshold);
     }
 
     /**
