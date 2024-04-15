@@ -22,6 +22,8 @@ contract ClaimRegistryUpgradeableTest is Test {
     address val2 = address(2);
     address val3 = address(3);
 
+    event UpdateConfig(address indexed user, uint256 oldTime, uint256 newTime, uint256 oldAmount, uint256 newAmount);
+
     function setUp() public {
         mockDeposit = new MockSBCDepositContract();
         _depositContractAddress = address(mockDeposit);
@@ -80,6 +82,23 @@ contract ClaimRegistryUpgradeableTest is Test {
         (, uint256 updatedTimeThreshold, uint256 updatedAmountThreshold,) = registry.configs(val1);
         assertEq(updatedTimeThreshold, newTimeThreshold);
         assertEq(updatedAmountThreshold, newAmountThreshold);
+    }
+
+    function test_UpdateConfigEvent() public {
+        uint256 initialTimeThreshold = 1 hours;
+        uint256 initialAmountThreshold = 1 ether;
+        uint256 newTimeThreshold = 2 hours;
+        uint256 newAmountThreshold = 2 ether;
+
+        // Register a validator
+        vm.prank(val1);
+        registry.register(val1, initialTimeThreshold, initialAmountThreshold);
+
+        // Update the validator's configuration
+        vm.expectEmit(true, true, true, true);
+        emit UpdateConfig(val1, initialTimeThreshold, newTimeThreshold, initialAmountThreshold, newAmountThreshold);
+        vm.prank(val1);
+        registry.updateConfig(val1, newTimeThreshold, newAmountThreshold);
     }
 
     function testFail_UpdateConfigInvalidUser() public {
