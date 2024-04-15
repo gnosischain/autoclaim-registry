@@ -202,7 +202,7 @@ contract ClaimRegistryUpgradeableTest is Test {
         assertEq(claimableAddrsEmpty.length, 0);
     }
 
-    function test_GetClaimableAddresses() public {
+    function test_GetClaimableAddresses_ArrayPilling() public {
         vm.pauseGasMetering();
         mockDeposit.fund(3000, 1 ether);
         vm.resumeGasMetering();

@@ -184,6 +184,7 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
         nonZeroParams(_timeThreshold, _amountThreshold)
         ownerOrAdmin(_withdrawalAddress)
     {
+        require(configs[_withdrawalAddress].status == ConfigStatus.INACTIVE, "Address already registered");
         _setConfig(_withdrawalAddress, _timeThreshold, _amountThreshold);
         validators.push(_withdrawalAddress);
         emit Register(_withdrawalAddress);
