@@ -6,27 +6,25 @@ import {ClaimRegistryUpgradeable} from "../src/ClaimRegistryUpgradeable.sol";
 import {ClaimRegistryProxy} from "../src/ClaimRegistryProxy.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-contract Deploy is Script {
+contract Upgrade is Script {
     ClaimRegistryUpgradeable registry;
     address _depositContract = 0x0B98057eA310F4d31F2a452B414647007d1645d9;
 
     function run() external {
-        deploy();
+        upgradeNoCall();
     }
 
-    function deploy() public {
+    function upgradeNoCall() public {
+        address proxyAddress = vm.envAddress("PROXY_ADDRESS");
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
-        address impl = address(new ClaimRegistryUpgradeable());
+        ClaimRegistryUpgradeable impl = new ClaimRegistryUpgradeable();
+        address newImplAddress = address(impl);
 
-        ClaimRegistryProxy proxy =
-            new ClaimRegistryProxy(impl, abi.encodeWithSignature("initialize(address,uint256)", _depositContract, 100));
+        // ClaimRegistryProxy proxy = ClaimRegistryProxy(proxyAddress);
+        registry = ClaimRegistryUpgradeable(address(proxyAddress));
 
-        registry = ClaimRegistryUpgradeable(address(proxy));
-
-        // assertEq(registry.depositContract(), _depositContract);
-        // assertEq(registry.batchSizeMax(), 100);
-        // assertEq(registry.implementation(), impl);
+        registry.upgradeToAndCall(newImplAddress, "");
 
         vm.stopBroadcast();
     }

@@ -28,6 +28,13 @@ source .env
 forge script script/Deploy.s.sol:Deploy --rpc-url $GNOSIS_RPC_URL --broadcast --etherscan-api-key $ETHERSCAN_API_KEY --verify --watch
 ```
 
+### Upgrade
+
+*Proxy address to call is got from `.env` `PROXY_ADDRESS` variable by default, change it if necessary
+```shell
+forge script script/Upgrade.s.sol:Upgrade --rpc-url $GNOSIS_RPC_URL --broadcast --etherscan-api-key $ETHERSCAN_API_KEY --verify --watch
+```
+
 ### Docs
 
 ```shell
@@ -51,6 +58,6 @@ Go to [Power Pool app](https://app-powerpool-finance.ipns.dweb.link/)
 
 | Name  | Gnosis Mainnet |
 | ------------- | ------------- |
-| ERC1967 Proxy  | [0xde674390d697e0998ec095d02472fbc1daa26ccb](https://gnosisscan.io/address/0xde674390d697e0998ec095d02472fbc1daa26ccb#code)  |
-| ClaimRegistryUpgradeable (implementation) | [0x72f93d713b45090573ea6699df64c0d13f625d29](https://gnosisscan.io/address/0x72f93d713b45090573ea6699df64c0d13f625d29#code)  |
+| ERC1967 Proxy  | [0x28f1ba1f2Db9Aa0ca4b3B7cD9Ae327f6E872867D](https://gnosisscan.io/address/0x28f1ba1f2Db9Aa0ca4b3B7cD9Ae327f6E872867D#code)  |
+| ClaimRegistryUpgradeable (implementation) | [0x72f93d713b45090573ea6699df64c0d13f625d29](https://gnosisscan.io/address/0x955e29346a962b741148cc6b23cc3192afc3844c#code)  |
 
