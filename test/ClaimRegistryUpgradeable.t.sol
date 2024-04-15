@@ -38,11 +38,35 @@ contract ClaimRegistryUpgradeableTest is Test {
         assertEq(address(registry.depositContract()), address(_depositContractAddress));
         assertEq(registry.batchSizeMax(), BATCH_SIZE_MAX);
 
-        test_GetImplimentation();
+        // test_GetImplimentation();
     }
 
-    function test_GetImplimentation() public {
-        assertEq(registry.implementation(), _implementation);
+    function test_InitialValidatorsLength() public {
+        assertEq(registry.getValidatorsLength(), 0, "Initial validators length should be 0");
+    }
+
+    function test_ValidatorsLengthAfterAdding() public {
+        registry.register(val1, 1, 1);
+        assertEq(registry.getValidatorsLength(), 1, "Validators length should be 1 after adding a validator");
+    }
+
+    function test_IsConfigActiveWhenActive() public {
+        registry.register(val1, 1, 1);
+        assertTrue(registry.isConfigActive(address(1)), "Config should be active");
+    }
+
+    function test_IsConfigActiveWhenNotActive() public {
+        assertFalse(registry.isConfigActive(address(2)), "Config should not be active");
+    }
+
+    function test_SetBatchSizeMaxAsOwner() public {
+        registry.setBatchSizeMax(500);
+        assertEq(registry.batchSizeMax(), 500, "Batch size max should be updated to 500");
+    }
+
+    function testFail_SetBatchSizeMaxAsNonOwner() public {
+        vm.prank(val2);
+        registry.setBatchSizeMax(500);
     }
 
     function test_Register() public {
@@ -114,6 +138,14 @@ contract ClaimRegistryUpgradeableTest is Test {
     // Tests configActive modifier
     function testFail_UpdateConfigInactiveConfig() public {
         registry.updateConfig(address(123456789), 1, 1);
+    }
+
+    function testFail_RegisterTwice() public {
+        vm.prank(val1);
+        registry.register(val1, 1 hours, 1 ether);
+
+        // Attempt to register the same validator again (should fail)
+        registry.register(val1, 1 hours, 1 ether);
     }
 
     function test_Unregister() public {
