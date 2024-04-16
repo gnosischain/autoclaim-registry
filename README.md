@@ -58,6 +58,6 @@ Go to [Power Pool app](https://app-powerpool-finance.ipns.dweb.link/)
 
 | Name  | Gnosis Mainnet |
 | ------------- | ------------- |
-| ERC1967 Proxy  | [0x28f1ba1f2Db9Aa0ca4b3B7cD9Ae327f6E872867D](https://gnosisscan.io/address/0x28f1ba1f2Db9Aa0ca4b3B7cD9Ae327f6E872867D#code)  |
-| ClaimRegistryUpgradeable (implementation) | [0x72f93d713b45090573ea6699df64c0d13f625d29](https://gnosisscan.io/address/0x955e29346a962b741148cc6b23cc3192afc3844c#code)  |
+| ERC1967 Proxy  | [0xe4d0a119cc2546c1ec4945c04b04985d1e59cdba](https://gnosisscan.io/address/0xe4d0a119cc2546c1ec4945c04b04985d1e59cdba)  |
+| ClaimRegistryUpgradeable (implementation) | [0xce0d4ba43b13f08183d611845cec80967f58d966](https://gnosisscan.io/address/0xce0d4ba43b13f08183d611845cec80967f58d966)  |
 
