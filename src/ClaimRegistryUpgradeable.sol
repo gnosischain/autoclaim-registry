@@ -21,6 +21,7 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
     }
 
     struct Config {
+        uint256 idx;
         uint256 lastClaim;
         uint256 timeThreshold;
         uint256 amountThreshold;
@@ -187,7 +188,7 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
         ownerOrAdmin(_withdrawalAddress)
     {
         require(configs[_withdrawalAddress].status == ConfigStatus.INACTIVE, "Address already registered");
-        _setConfig(_withdrawalAddress, _timeThreshold, _amountThreshold);
+        _setConfig(validators.length, _withdrawalAddress, _timeThreshold, _amountThreshold);
         validators.push(_withdrawalAddress);
         emit Register(_withdrawalAddress);
     }
@@ -211,7 +212,7 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
             configs[_withdrawalAddress].amountThreshold,
             _amountThreshold
         );
-        _setConfig(_withdrawalAddress, _timeThreshold, _amountThreshold);
+        _setConfig(configs[_withdrawalAddress].idx, _withdrawalAddress, _timeThreshold, _amountThreshold);
     }
 
     /**
@@ -223,6 +224,12 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
         ownerOrAdmin(_withdrawalAddress)
         configActive(_withdrawalAddress)
     {
+        uint256 idx = configs[_withdrawalAddress].idx;
+
+        validators[idx] = validators[validators.length - 1]; // move last element to the removed element's position
+        configs[validators[idx]].idx = idx; // update moved element's index
+        validators.pop();
+
         delete configs[_withdrawalAddress];
         emit Unregister(_withdrawalAddress);
     }
@@ -255,7 +262,10 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      * @param _timeThreshold Time threshold for withdrawal.
      * @param _amountThreshold Amount threshold for withdrawal.
      */
-    function _setConfig(address _withdrawalAddress, uint256 _timeThreshold, uint256 _amountThreshold) internal {
+    function _setConfig(uint256 idx, address _withdrawalAddress, uint256 _timeThreshold, uint256 _amountThreshold)
+        internal
+    {
+        configs[_withdrawalAddress].idx = idx;
         configs[_withdrawalAddress].timeThreshold = _timeThreshold;
         configs[_withdrawalAddress].amountThreshold = _amountThreshold;
         configs[_withdrawalAddress].status = ConfigStatus.ACTIVE;

@@ -78,9 +78,10 @@ contract ClaimRegistryUpgradeableTest is Test {
         registry.register(val1, timeThreshold, amountThreshold);
 
         // Check if the validator is registered
-        (, uint256 registeredTimeThreshold, uint256 registeredAmountThreshold,) = registry.configs(val1);
+        (uint256 idx,, uint256 registeredTimeThreshold, uint256 registeredAmountThreshold,) = registry.configs(val1);
         assertEq(registeredTimeThreshold, timeThreshold);
         assertEq(registeredAmountThreshold, amountThreshold);
+        assertEq(idx, registry.getValidatorsLength() - 1);
     }
 
     function testFail_RegisterInvalidThresholds() public {
@@ -98,14 +99,16 @@ contract ClaimRegistryUpgradeableTest is Test {
         vm.prank(val1);
         registry.register(val1, initialTimeThreshold, initialAmountThreshold);
 
+        (uint256 oldIdx,,,,) = registry.configs(val1);
         // Update the validator's configuration
         vm.prank(val1);
         registry.updateConfig(val1, newTimeThreshold, newAmountThreshold);
 
         // Check if the configuration is updated
-        (, uint256 updatedTimeThreshold, uint256 updatedAmountThreshold,) = registry.configs(val1);
+        (uint256 newIdx,, uint256 updatedTimeThreshold, uint256 updatedAmountThreshold,) = registry.configs(val1);
         assertEq(updatedTimeThreshold, newTimeThreshold);
         assertEq(updatedAmountThreshold, newAmountThreshold);
+        assertEq(oldIdx, newIdx);
     }
 
     function test_UpdateConfigEvent() public {
@@ -159,7 +162,7 @@ contract ClaimRegistryUpgradeableTest is Test {
         registry.unregister(val1);
 
         // Check if the validator is unregistered
-        (,,, ClaimRegistryUpgradeable.ConfigStatus status) = registry.configs(val1);
+        (,,,, ClaimRegistryUpgradeable.ConfigStatus status) = registry.configs(val1);
         assertEq(uint256(status), uint256(ClaimRegistryUpgradeable.ConfigStatus.INACTIVE));
     }
 
@@ -276,5 +279,21 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         address[] memory claimableAddrs = registry.getClaimableAddresses();
         assertEq(claimableAddrs.length, claimableAccs);
+    }
+
+    function test_UnregisterValidatorsArrayShift() public {
+        uint160 accounts = 100;
+        uint256 timeThreshold = 1 hours;
+        uint256 amountThreshold = 1 ether;
+
+        for (uint160 i = 0; i < accounts; i++) {
+            vm.prank(address(i));
+            registry.register(address(i), timeThreshold, amountThreshold);
+        }
+        for (uint160 i = 0; i < accounts; i++) {
+            vm.prank(address(i));
+            registry.unregister(address(i));
+            assertEq(registry.getValidatorsLength(), accounts - i - 1);
+        }
     }
 }
