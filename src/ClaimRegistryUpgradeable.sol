@@ -116,7 +116,9 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      * @notice TODO: Consider offset shifting option for huge validators set.
      */
     function getClaimableAddresses() public view returns (address[] memory) {
-        address[] memory claimableAddresses = new address[](batchSizeMax);
+        uint256 size = batchSizeMax < validators.length ? batchSizeMax : validators.length;
+        address[] memory claimableAddresses = new address[](size);
+
         uint256 counter = 0;
 
         for (uint256 i = 0; i < validators.length; i++) {
