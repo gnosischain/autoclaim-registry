@@ -130,12 +130,12 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
                 continue;
             }
             // add address to list if amount or time condition met
+            uint256 timeSinceClaim = block.timestamp - configs[val].lastClaim;
             if (
-                (withdrawableAmount > configs[val].amountThreshold)
-                    || (
-                        configs[val].timeThreshold > 0
-                            && block.timestamp - configs[val].lastClaim > configs[val].timeThreshold
-                    )
+                (
+                    (withdrawableAmount > configs[val].amountThreshold)
+                        || (configs[val].timeThreshold > 0 && timeSinceClaim > configs[val].timeThreshold)
+                ) && timeSinceClaim > 1 days
             ) {
                 claimableAddresses[counter] = val;
                 counter++;
