@@ -1,10 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
+import "../ClaimRegistryUpgradeable.sol";
+
 interface IClaimRegistryUpgradeable {
     function initialize(address _depositContract, uint256 _batchSizeMax) external;
 
     function getValidatorsLength() external view returns (uint256);
+
+    function getConfig(address _withdrawalAddress)
+        external
+        view
+        returns (uint256, uint256, uint256, uint256, uint256);
 
     function register(address _withdrawalAddress, uint256 _timeThreshold, uint256 _amountThreshold) external;
 

@@ -39,6 +39,7 @@ contract ClaimRegistryUpgradeableTest is Test {
         assertEq(registry.batchSizeMax(), BATCH_SIZE_MAX);
 
         // test_GetImplimentation();
+        vm.warp(25 hours);
     }
 
     function test_InitialValidatorsLength() public {
@@ -266,13 +267,13 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         for (uint160 i = 0; i < accounts; i++) {
             vm.prank(address(i));
-            registry.register(address(i), 10 hours, 10 ether);
+            registry.register(address(i), 7 days, 10 ether);
         }
 
         for (uint160 i = 0; i < claimableAccs; i++) {
             address acc = address(i + 101);
             vm.broadcast(acc);
-            registry.register(acc, 1 hours, 0);
+            registry.register(acc, 1 days, 0);
         }
 
         vm.warp(2 hours);

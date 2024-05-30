@@ -131,20 +131,20 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
             }
             // add address to list if amount or time condition met
             uint256 timeSinceClaim = block.timestamp - configs[val].lastClaim;
-            if (
-                (
+            if (timeSinceClaim > 1 days) {
+                // 1 day is the minimum time threshold between claims
+                if (
                     (withdrawableAmount > configs[val].amountThreshold)
                         || (configs[val].timeThreshold > 0 && timeSinceClaim > configs[val].timeThreshold)
-                ) && timeSinceClaim > 1 days
-            ) {
-                claimableAddresses[counter] = val;
-                counter++;
-                if (counter == batchSizeMax) {
-                    break;
+                ) {
+                    claimableAddresses[counter] = val;
+                    counter++;
+                    if (counter == batchSizeMax) {
+                        break;
+                    }
                 }
             }
         }
-
         // trim an array to the actual size
         assembly {
             mstore(claimableAddresses, counter)
@@ -161,6 +161,11 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      */
     function getValidatorsLength() public view returns (uint256) {
         return validators.length;
+    }
+
+    function getConfig(address _withdrawalAddress) public view returns (uint256, uint256, uint256, uint256, uint256) {
+        Config memory config = configs[_withdrawalAddress];
+        return (config.idx, config.lastClaim, config.timeThreshold, config.amountThreshold, uint256(config.status));
     }
 
     /**
