@@ -39,6 +39,7 @@ contract ClaimRegistryUpgradeableTest is Test {
         assertEq(registry.batchSizeMax(), BATCH_SIZE_MAX);
 
         // test_GetImplimentation();
+        vm.warp(25 hours);
     }
 
     function test_InitialValidatorsLength() public {
@@ -266,19 +267,39 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         for (uint160 i = 0; i < accounts; i++) {
             vm.prank(address(i));
-            registry.register(address(i), 10 hours, 10 ether);
+            registry.register(address(i), 7 days, 10 ether);
         }
 
         for (uint160 i = 0; i < claimableAccs; i++) {
             address acc = address(i + 101);
             vm.broadcast(acc);
-            registry.register(acc, 1 hours, 0);
+            registry.register(acc, 1 days, 0);
         }
-
-        vm.warp(2 hours);
 
         address[] memory claimableAddrs = registry.getClaimableAddresses();
         assertEq(claimableAddrs.length, claimableAccs);
+    }
+
+    function test_ClaimMinDelay() public {
+        mockDeposit.fund(10, 1 ether);
+
+        for (uint160 i = 0; i < 10; i++) {
+            vm.prank(address(i));
+            registry.register(address(i), 1 hours, 5 ether);
+        }
+
+        assertEq(10, registry.getClaimableAddresses().length);
+        vm.warp(25 hours);
+        address[] memory claimableAddrs = registry.getClaimableAddresses();
+        registry.claimBatch(claimableAddrs);
+
+        mockDeposit.fund(10, 1 wei);
+
+        vm.warp(27 hours);
+        assertEq(0, registry.getClaimableAddresses().length);
+
+        vm.warp(50 hours);
+        assertEq(10, registry.getClaimableAddresses().length);
     }
 
     function test_UnregisterValidatorsArrayShift() public {

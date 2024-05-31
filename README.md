@@ -59,5 +59,5 @@ Go to [Power Pool app](https://app-powerpool-finance.ipns.dweb.link/)
 | Name                                   | Gnosis Mainnet                                                                       | Chiado                                     |
 |----------------------------------------|--------------------------------------------------------------------------------------|--------------------------------------------|
 | ERC1967 Proxy                          | [0xe4d0a119cc2546c1ec4945c04b04985d1e59cdba](https://gnosisscan.io/address/0xe4d0a119cc2546c1ec4945c04b04985d1e59cdba) | [0x28f1ba1f2Db9Aa0ca4b3B7cD9Ae327f6E872867D](https://chiadoscan.io/address/0x28f1ba1f2Db9Aa0ca4b3B7cD9Ae327f6E872867D) |
-| ClaimRegistryUpgradeable (implementation) | [0xce0d4ba43b13f08183d611845cec80967f58d966](https://gnosisscan.io/address/0xce0d4ba43b13f08183d611845cec80967f58d966) | [0x630098a725042A25588B194928c43224e6fE6E82](https://chiadoscan.io/address/0x630098a725042A25588B194928c43224e6fE6E82) |
+| ClaimRegistryUpgradeable (implementation) | [0x7b2461e35fd7c45ce2dcdab964a722ffb0fc483c](https://gnosisscan.io/address/0x7b2461e35fd7c45ce2dcdab964a722ffb0fc483c) | [0x630098a725042A25588B194928c43224e6fE6E82](https://chiadoscan.io/address/0x630098a725042A25588B194928c43224e6fE6E82) |
 
