@@ -276,10 +276,30 @@ contract ClaimRegistryUpgradeableTest is Test {
             registry.register(acc, 1 days, 0);
         }
 
-        vm.warp(2 hours);
-
         address[] memory claimableAddrs = registry.getClaimableAddresses();
         assertEq(claimableAddrs.length, claimableAccs);
+    }
+
+    function test_ClaimMinDelay() public {
+        mockDeposit.fund(10, 1 ether);
+
+        for (uint160 i = 0; i < 10; i++) {
+            vm.prank(address(i));
+            registry.register(address(i), 1 hours, 5 ether);
+        }
+
+        assertEq(10, registry.getClaimableAddresses().length);
+        vm.warp(25 hours);
+        address[] memory claimableAddrs = registry.getClaimableAddresses();
+        registry.claimBatch(claimableAddrs);
+
+        mockDeposit.fund(10, 1 wei);
+
+        vm.warp(27 hours);
+        assertEq(0, registry.getClaimableAddresses().length);
+
+        vm.warp(50 hours);
+        assertEq(10, registry.getClaimableAddresses().length);
     }
 
     function test_UnregisterValidatorsArrayShift() public {
