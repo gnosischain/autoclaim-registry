@@ -13,7 +13,11 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
  * @dev A contract for managing claim registrations and withdrawals for validators.
  * Contains only application specific logic, not upgradeability.
  */
-contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable, OwnableUpgradeable {
+contract ClaimRegistryUpgradeable is
+    IClaimRegistryUpgradeable,
+    UUPSUpgradeable,
+    OwnableUpgradeable
+{
     // State variables
     enum ConfigStatus {
         INACTIVE,
@@ -31,6 +35,8 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
     // Public variables
     ISBCDepositContract public depositContract;
     mapping(address => Config) public configs;
+    mapping(address => address) public actionContract;
+    mapping(address => bool) public whitelistedActionContracts;
     address[] public validators;
 
     uint256 public batchSizeMax;
@@ -38,19 +44,29 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
     // Events
     event Register(address indexed user);
     event Unregister(address indexed user);
-    event UpdateConfig(address indexed user, uint256 oldTime, uint256 newTime, uint256 oldAmount, uint256 newAmount);
+    event UpdateConfig(
+        address indexed user,
+        uint256 oldTime,
+        uint256 newTime,
+        uint256 oldAmount,
+        uint256 newAmount
+    );
     // TODO: decidew if we want many single Claim events or one ClaimBatch event
     event ClaimBatch(address indexed caller, address[] withdrawalAddresses);
 
     // Modifiers
     modifier nonZeroParams(uint256 _timeThreshold, uint256 _amountThreshold) {
-        require(_timeThreshold > 0 || _amountThreshold > 0, "One of thresholds should be non-zero");
+        require(
+            _timeThreshold > 0 || _amountThreshold > 0,
+            "One of thresholds should be non-zero"
+        );
         _;
     }
 
     modifier ownerOrAdmin(address withdrawalAddress) {
         require(
-            msg.sender == owner() || msg.sender == withdrawalAddress, "Caller is not an owner of withdrawal credentials"
+            msg.sender == owner() || msg.sender == withdrawalAddress,
+            "Caller is not an owner of withdrawal credentials"
         );
         _;
     }
@@ -74,7 +90,10 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      * @dev Initializes the proxy contract, intended to be called only once.
      * @param _depositContract Address of the deposit contract.
      */
-    function initialize(address _depositContract, uint256 _batchSizeMax) public initializer {
+    function initialize(
+        address _depositContract,
+        uint256 _batchSizeMax
+    ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
 
@@ -86,7 +105,9 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      * @dev Ensures that only owner can upgrade the implementation.
      * @param newImplementation Address of the new implementation.
      */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
 
     /**
      * @dev Compliments the ERC1967 pattern make implementation address retrievable.
@@ -108,7 +129,17 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
         if (addresses.length == 0) {
             return (false, "");
         }
-        return (true, abi.encodeWithSelector(this.claimBatch.selector, addresses));
+        return (
+            true,
+            abi.encodeWithSelector(this.claimBatch.selector, addresses)
+        );
+    }
+
+    function setWhitelistedActionContract(
+        address actionContract,
+        bool status
+    ) external onlyOwner {
+        whitelistedActionContracts[actionContract] = status;
     }
 
     /**
@@ -117,7 +148,9 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      * @notice TODO: Consider offset shifting option for huge validators set.
      */
     function getClaimableAddresses() public view returns (address[] memory) {
-        uint256 size = batchSizeMax < validators.length ? batchSizeMax : validators.length;
+        uint256 size = batchSizeMax < validators.length
+            ? batchSizeMax
+            : validators.length;
         address[] memory claimableAddresses = new address[](size);
 
         uint256 counter = 0;
@@ -125,8 +158,13 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
         for (uint256 i = 0; i < validators.length; i++) {
             address val = validators[i];
             // skip for inactive configs and zero withdrawable amount
-            uint256 withdrawableAmount = depositContract.withdrawableAmount(val);
-            if (withdrawableAmount == 0 || configs[val].status == ConfigStatus.INACTIVE) {
+            uint256 withdrawableAmount = depositContract.withdrawableAmount(
+                val
+            );
+            if (
+                withdrawableAmount == 0 ||
+                configs[val].status == ConfigStatus.INACTIVE
+            ) {
                 continue;
             }
             // add address to list if amount or time condition met
@@ -134,8 +172,9 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
             if (timeSinceClaim > 1 days) {
                 // 1 day is the minimum time threshold between claims
                 if (
-                    (withdrawableAmount > configs[val].amountThreshold)
-                        || (configs[val].timeThreshold > 0 && timeSinceClaim > configs[val].timeThreshold)
+                    (withdrawableAmount > configs[val].amountThreshold) ||
+                    (configs[val].timeThreshold > 0 &&
+                        timeSinceClaim > configs[val].timeThreshold)
                 ) {
                     claimableAddresses[counter] = val;
                     counter++;
@@ -163,9 +202,17 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
         return validators.length;
     }
 
-    function getConfig(address _withdrawalAddress) public view returns (uint256, uint256, uint256, uint256, uint256) {
+    function getConfig(
+        address _withdrawalAddress
+    ) public view returns (uint256, uint256, uint256, uint256, uint256) {
         Config memory config = configs[_withdrawalAddress];
-        return (config.idx, config.lastClaim, config.timeThreshold, config.amountThreshold, uint256(config.status));
+        return (
+            config.idx,
+            config.lastClaim,
+            config.timeThreshold,
+            config.amountThreshold,
+            uint256(config.status)
+        );
     }
 
     /**
@@ -173,7 +220,9 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      * @param _withdrawalAddress The withdrawal address to check.
      * @return Boolean indicating whether the configuration is active.
      */
-    function isConfigActive(address _withdrawalAddress) public view returns (bool) {
+    function isConfigActive(
+        address _withdrawalAddress
+    ) public view returns (bool) {
         return configs[_withdrawalAddress].status == ConfigStatus.ACTIVE;
     }
 
@@ -187,13 +236,25 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      * @param _timeThreshold Time threshold for withdrawal.
      * @param _amountThreshold Amount threshold for withdrawal.
      */
-    function register(address _withdrawalAddress, uint256 _timeThreshold, uint256 _amountThreshold)
+    function register(
+        address _withdrawalAddress,
+        uint256 _timeThreshold,
+        uint256 _amountThreshold
+    )
         public
         nonZeroParams(_timeThreshold, _amountThreshold)
         ownerOrAdmin(_withdrawalAddress)
     {
-        require(configs[_withdrawalAddress].status == ConfigStatus.INACTIVE, "Address already registered");
-        _setConfig(validators.length, _withdrawalAddress, _timeThreshold, _amountThreshold);
+        require(
+            configs[_withdrawalAddress].status == ConfigStatus.INACTIVE,
+            "Address already registered"
+        );
+        _setConfig(
+            validators.length,
+            _withdrawalAddress,
+            _timeThreshold,
+            _amountThreshold
+        );
         validators.push(_withdrawalAddress);
         emit Register(_withdrawalAddress);
     }
@@ -204,7 +265,11 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      * @param _timeThreshold New time threshold for withdrawal.
      * @param _amountThreshold New amount threshold for withdrawal.
      */
-    function updateConfig(address _withdrawalAddress, uint256 _timeThreshold, uint256 _amountThreshold)
+    function updateConfig(
+        address _withdrawalAddress,
+        uint256 _timeThreshold,
+        uint256 _amountThreshold
+    )
         public
         nonZeroParams(_timeThreshold, _amountThreshold)
         ownerOrAdmin(_withdrawalAddress)
@@ -217,18 +282,21 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
             configs[_withdrawalAddress].amountThreshold,
             _amountThreshold
         );
-        _setConfig(configs[_withdrawalAddress].idx, _withdrawalAddress, _timeThreshold, _amountThreshold);
+        _setConfig(
+            configs[_withdrawalAddress].idx,
+            _withdrawalAddress,
+            _timeThreshold,
+            _amountThreshold
+        );
     }
 
     /**
      * @dev Unregisters a withdrawal address.
      * @param _withdrawalAddress The withdrawal address to unregister.
      */
-    function unregister(address _withdrawalAddress)
-        public
-        ownerOrAdmin(_withdrawalAddress)
-        configActive(_withdrawalAddress)
-    {
+    function unregister(
+        address _withdrawalAddress
+    ) public ownerOrAdmin(_withdrawalAddress) configActive(_withdrawalAddress) {
         uint256 idx = configs[_withdrawalAddress].idx;
 
         validators[idx] = validators[validators.length - 1]; // move last element to the removed element's position
@@ -255,9 +323,23 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      * @dev Claims withdrawal for a specific address and updates last claim timestamp.
      * @param withdrawalAddress The withdrawal address to claim for.
      */
-    function claim(address withdrawalAddress) public {
+    function claim(
+        address withdrawalAddress,
+        bytes calldata actionData
+    ) public {
         configs[withdrawalAddress].lastClaim = block.timestamp;
         depositContract.claimWithdrawal(withdrawalAddress);
+
+        if (actionContracts[withdrawalAddress] != address(0)) {
+            require(
+                whitelistedActionContracts[actionContracts[withdrawalAddress]],
+                "Action contract not whitelisted"
+            );
+            (bool success, ) = actionContracts[withdrawalAddress].call(
+                actionData
+            );
+            require(success, "Action contract execution failed");
+        }
     }
 
     // Internal functions
@@ -267,9 +349,12 @@ contract ClaimRegistryUpgradeable is IClaimRegistryUpgradeable, UUPSUpgradeable,
      * @param _timeThreshold Time threshold for withdrawal.
      * @param _amountThreshold Amount threshold for withdrawal.
      */
-    function _setConfig(uint256 idx, address _withdrawalAddress, uint256 _timeThreshold, uint256 _amountThreshold)
-        internal
-    {
+    function _setConfig(
+        uint256 idx,
+        address _withdrawalAddress,
+        uint256 _timeThreshold,
+        uint256 _amountThreshold
+    ) internal {
         configs[_withdrawalAddress].idx = idx;
         configs[_withdrawalAddress].timeThreshold = _timeThreshold;
         configs[_withdrawalAddress].amountThreshold = _amountThreshold;
