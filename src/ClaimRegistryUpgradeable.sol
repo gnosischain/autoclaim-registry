@@ -136,10 +136,10 @@ contract ClaimRegistryUpgradeable is
     }
 
     function setWhitelistedActionContract(
-        address actionContract,
+        address _actionContract,
         bool status
     ) external onlyOwner {
-        whitelistedActionContracts[actionContract] = status;
+        whitelistedActionContracts[_actionContract] = status;
     }
 
     /**
@@ -323,20 +323,19 @@ contract ClaimRegistryUpgradeable is
      * @dev Claims withdrawal for a specific address and updates last claim timestamp.
      * @param withdrawalAddress The withdrawal address to claim for.
      */
-    function claim(
-        address withdrawalAddress,
-        bytes calldata actionData
-    ) public {
+    function claim(address withdrawalAddress) public {
+        uint256 amount = depositContract.withdrawableAmount(withdrawalAddress);
         configs[withdrawalAddress].lastClaim = block.timestamp;
         depositContract.claimWithdrawal(withdrawalAddress);
 
-        if (actionContracts[withdrawalAddress] != address(0)) {
+        if (actionContract[withdrawalAddress] != address(0)) {
             require(
-                whitelistedActionContracts[actionContracts[withdrawalAddress]],
+                whitelistedActionContracts[actionContract[withdrawalAddress]],
                 "Action contract not whitelisted"
             );
-            (bool success, ) = actionContracts[withdrawalAddress].call(
-                actionData
+            (bool success, ) = actionContract[withdrawalAddress].call(
+                withdrawalAddress,
+                amount
             );
             require(success, "Action contract execution failed");
         }
