@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import "./interfaces/ISBCDepositContract.sol";
 import "./interfaces/IClaimRegistryUpgradeable.sol";
+import "./interfaces/IClaimActionUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -328,16 +329,16 @@ contract ClaimRegistryUpgradeable is
         configs[withdrawalAddress].lastClaim = block.timestamp;
         depositContract.claimWithdrawal(withdrawalAddress);
 
-        if (actionContract[withdrawalAddress] != address(0)) {
+        address userActionContract = actionContract[withdrawalAddress];
+        if (userActionContract != address(0)) {
             require(
-                whitelistedActionContracts[actionContract[withdrawalAddress]],
+                whitelistedActionContracts[userActionContract],
                 "Action contract not whitelisted"
             );
-            (bool success, ) = actionContract[withdrawalAddress].call(
+            IClaimActionUpgradeable(userActionContract).executePostClaimAction(
                 withdrawalAddress,
                 amount
             );
-            require(success, "Action contract execution failed");
         }
     }
 
