@@ -47,12 +47,12 @@ contract ClaimRegistryUpgradeableTest is Test {
     }
 
     function test_ValidatorsLengthAfterAdding() public {
-        registry.register(val1, 1, 1);
+        registry.register(val1, 1, 1, address(0));
         assertEq(registry.getValidatorsLength(), 1, "Validators length should be 1 after adding a validator");
     }
 
     function test_IsConfigActiveWhenActive() public {
-        registry.register(val1, 1, 1);
+        registry.register(val1, 1, 1, address(0));
         assertTrue(registry.isConfigActive(address(1)), "Config should be active");
     }
 
@@ -76,7 +76,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         // Simulate successful registration
         vm.prank(val1);
-        registry.register(val1, timeThreshold, amountThreshold);
+        registry.register(val1, timeThreshold, amountThreshold, address(0));
 
         // Check if the validator is registered
         (uint256 idx,, uint256 registeredTimeThreshold, uint256 registeredAmountThreshold,) = registry.configs(val1);
@@ -87,7 +87,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
     function testFail_RegisterInvalidThresholds() public {
         // Attempt registration with zero thresholds (should fail)
-        registry.register(val1, 0, 0);
+        registry.register(val1, 0, 0, address(0));
     }
 
     function test_UpdateConfig() public {
@@ -98,7 +98,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         // Register a validator
         vm.prank(val1);
-        registry.register(val1, initialTimeThreshold, initialAmountThreshold);
+        registry.register(val1, initialTimeThreshold, initialAmountThreshold, address(0));
 
         (uint256 oldIdx,,,,) = registry.configs(val1);
         // Update the validator's configuration
@@ -120,7 +120,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         // Register a validator
         vm.prank(val1);
-        registry.register(val1, initialTimeThreshold, initialAmountThreshold);
+        registry.register(val1, initialTimeThreshold, initialAmountThreshold, address(0));
 
         // Update the validator's configuration
         vm.expectEmit(true, true, true, true);
@@ -146,10 +146,10 @@ contract ClaimRegistryUpgradeableTest is Test {
 
     function testFail_RegisterTwice() public {
         vm.prank(val1);
-        registry.register(val1, 1 hours, 1 ether);
+        registry.register(val1, 1 hours, 1 ether, address(0));
 
         // Attempt to register the same validator again (should fail)
-        registry.register(val1, 1 hours, 1 ether);
+        registry.register(val1, 1 hours, 1 ether, address(0));
     }
 
     function test_Unregister() public {
@@ -158,7 +158,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         // Register and then unregister a validator
         vm.prank(val1);
-        registry.register(val1, timeThreshold, amountThreshold);
+        registry.register(val1, timeThreshold, amountThreshold, address(0));
         vm.prank(val1);
         registry.unregister(val1);
 
@@ -223,7 +223,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         for (uint160 i = 0; i < accounts; i++) {
             vm.prank(address(i));
-            registry.register(address(i), 1 hours, 1 ether);
+            registry.register(address(i), 1 hours, 1 ether, address(0));
         }
 
         _claimWithBatchAssertions(accounts);
@@ -267,13 +267,13 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         for (uint160 i = 0; i < accounts; i++) {
             vm.prank(address(i));
-            registry.register(address(i), 7 days, 10 ether);
+            registry.register(address(i), 7 days, 10 ether, address(0));
         }
 
         for (uint160 i = 0; i < claimableAccs; i++) {
             address acc = address(i + 101);
             vm.broadcast(acc);
-            registry.register(acc, 1 days, 0);
+            registry.register(acc, 1 days, 0, address(0));
         }
 
         address[] memory claimableAddrs = registry.getClaimableAddresses();
@@ -285,7 +285,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         for (uint160 i = 0; i < 10; i++) {
             vm.prank(address(i));
-            registry.register(address(i), 1 hours, 5 ether);
+            registry.register(address(i), 1 hours, 5 ether, address(0));
         }
 
         assertEq(10, registry.getClaimableAddresses().length);
@@ -309,7 +309,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         for (uint160 i = 0; i < accounts; i++) {
             vm.prank(address(i));
-            registry.register(address(i), timeThreshold, amountThreshold);
+            registry.register(address(i), timeThreshold, amountThreshold, address(0));
         }
         for (uint160 i = 0; i < accounts; i++) {
             vm.prank(address(i));

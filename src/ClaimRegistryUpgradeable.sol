@@ -240,7 +240,8 @@ contract ClaimRegistryUpgradeable is
     function register(
         address _withdrawalAddress,
         uint256 _timeThreshold,
-        uint256 _amountThreshold
+        uint256 _amountThreshold,
+        address _actionContract
     )
         public
         nonZeroParams(_timeThreshold, _amountThreshold)
@@ -250,6 +251,14 @@ contract ClaimRegistryUpgradeable is
             configs[_withdrawalAddress].status == ConfigStatus.INACTIVE,
             "Address already registered"
         );
+
+        if (_actionContract != address(0)) {
+            require(
+                whitelistedActionContracts[_actionContract],
+                "Action contract not whitelisted"
+            );
+            actionContract[_withdrawalAddress] = _actionContract;
+        }
         _setConfig(
             validators.length,
             _withdrawalAddress,
@@ -299,6 +308,8 @@ contract ClaimRegistryUpgradeable is
         address _withdrawalAddress
     ) public ownerOrAdmin(_withdrawalAddress) configActive(_withdrawalAddress) {
         uint256 idx = configs[_withdrawalAddress].idx;
+
+        actionContract[_withdrawalAddress] = address(0);
 
         validators[idx] = validators[validators.length - 1]; // move last element to the removed element's position
         configs[validators[idx]].idx = idx; // update moved element's index
