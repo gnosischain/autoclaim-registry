@@ -231,6 +231,19 @@ contract ClaimRegistryUpgradeable is
         batchSizeMax = size;
     }
 
+    function setActionContract(
+        address _withdrawalAddress,
+        address _actionContract
+    ) public ownerOrAdmin(_withdrawalAddress) {
+        if (_actionContract != address(0)) {
+            require(
+                whitelistedActionContracts[_actionContract],
+                "Action contract not whitelisted"
+            );
+            actionContract[_withdrawalAddress] = _actionContract;
+        }
+    }
+
     /**
      * @dev Registers a user with withdrawal credentials.
      * @param _withdrawalAddress The address to register for withdrawals.
@@ -252,13 +265,8 @@ contract ClaimRegistryUpgradeable is
             "Address already registered"
         );
 
-        if (_actionContract != address(0)) {
-            require(
-                whitelistedActionContracts[_actionContract],
-                "Action contract not whitelisted"
-            );
-            actionContract[_withdrawalAddress] = _actionContract;
-        }
+        setActionContract(_withdrawalAddress, _actionContract);
+
         _setConfig(
             validators.length,
             _withdrawalAddress,
