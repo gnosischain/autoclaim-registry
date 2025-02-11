@@ -7,18 +7,20 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract ClaimActionUpgradeable is UUPSUpgradeable, OwnableUpgradeable {
+contract ClaimActionUpgradeable is
+    IClaimActionUpgradeable,
+    UUPSUpgradeable,
+    OwnableUpgradeable
+{
     address private gnoTokenAddress =
         0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb;
     address private wxdaiTokenAddress =
         0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d;
     address private eureTokenAddress =
         0xcB444e90D8198415266c6a2724b7900fb12FC56E;
-    address private claimRegistryAddress =
-        0xcB444e90D8198415266c6a2724b7900fb12FC56E;
+    address public claimRegistryAddress;
 
     mapping(address => address) forwardingAddresses;
-    address public balancerVault;
     address public curvePool;
 
     bool public balancerSandwichPrevention = true; // enable/disable sandich prevention for the balancer step
@@ -44,10 +46,13 @@ contract ClaimActionUpgradeable is UUPSUpgradeable, OwnableUpgradeable {
 
     /**
      * @dev Initializes the proxy contract, intended to be called only once.
+     * @param _claimRegistryAddress Address of the claim registry contract.
      */
-    function initialize() public initializer {
+    function initialize(address _claimRegistryAddress) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+
+        claimRegistryAddress = _claimRegistryAddress;
     }
 
     /**
@@ -66,9 +71,7 @@ contract ClaimActionUpgradeable is UUPSUpgradeable, OwnableUpgradeable {
         return ERC1967Utils.getImplementation();
     }
 
-    constructor(address _balancerVault, address _curvePool) {
-        balancerVault = _balancerVault;
-        curvePool = _curvePool;
+    constructor() {
         _disableInitializers();
     }
 

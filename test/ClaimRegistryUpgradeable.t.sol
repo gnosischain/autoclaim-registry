@@ -5,11 +5,13 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
 import {ClaimRegistryUpgradeable} from "../src/ClaimRegistryUpgradeable.sol";
+import {ClaimActionUpgradeable} from "../src/ClaimActionUpgradeable.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {MockSBCDepositContract} from "./Mocks.sol";
 
 contract ClaimRegistryUpgradeableTest is Test {
     ClaimRegistryUpgradeable registry;
+    ClaimActionUpgradeable action;
 
     address _depositContractAddress;
     address _implementation;
@@ -28,15 +30,23 @@ contract ClaimRegistryUpgradeableTest is Test {
         mockDeposit = new MockSBCDepositContract();
         _depositContractAddress = address(mockDeposit);
 
-        ClaimRegistryUpgradeable impl = new ClaimRegistryUpgradeable();
-        _implementation = address(impl);
+        ClaimRegistryUpgradeable implRegistry = new ClaimRegistryUpgradeable();
+        _implementation = address(implRegistry);
 
-        ERC1967Proxy proxy = new ERC1967Proxy(_implementation, "");
-        registry = ClaimRegistryUpgradeable(address(proxy));
+        ERC1967Proxy proxyRegistry = new ERC1967Proxy(_implementation, "");
+        registry = ClaimRegistryUpgradeable(address(proxyRegistry));
         registry.initialize(_depositContractAddress, BATCH_SIZE_MAX);
+
+        ClaimActionUpgradeable implAction = new ClaimActionUpgradeable();
+        _implementation = address(implAction);
+
+        ERC1967Proxy proxyAction = new ERC1967Proxy(_implementation, "");
+        action = ClaimActionUpgradeable(address(proxyAction));
+        action.initialize(address(registry));
 
         assertEq(address(registry.depositContract()), address(_depositContractAddress));
         assertEq(registry.batchSizeMax(), BATCH_SIZE_MAX);
+        assertEq(action.claimRegistryAddress(), address(registry));
 
         // test_GetImplimentation();
         vm.warp(25 hours);
