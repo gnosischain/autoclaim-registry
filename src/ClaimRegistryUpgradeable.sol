@@ -54,6 +54,7 @@ contract ClaimRegistryUpgradeable is
     );
     // TODO: decidew if we want many single Claim events or one ClaimBatch event
     event ClaimBatch(address indexed caller, address[] withdrawalAddresses);
+    event ClaimFailed(address indexed withdrawalAddress, string reason);
 
     // Modifiers
     modifier nonZeroParams(uint256 _timeThreshold, uint256 _amountThreshold) {
@@ -334,7 +335,13 @@ contract ClaimRegistryUpgradeable is
      */
     function claimBatch(address[] calldata withdrawalAddresses) public {
         for (uint256 i = 0; i < withdrawalAddresses.length; i++) {
-            claim(withdrawalAddresses[i]);
+            try this.claim(withdrawalAddresses[i]) {} catch Error(
+                string memory reason
+            ) {
+                emit ClaimFailed(withdrawalAddresses[i], reason);
+            } catch {
+                emit ClaimFailed(withdrawalAddresses[i], "Unknown error");
+            }
         }
         emit ClaimBatch(msg.sender, withdrawalAddresses);
     }
