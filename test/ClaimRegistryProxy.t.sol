@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import {ClaimRegistryUpgradeable} from "../src/ClaimRegistryUpgradeable.sol";
+import {ClaimRegistryUpgradeableOld} from "../src/ClaimRegistryUpgradeableOld.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract ClaimRegistryProxyTest is Test {
@@ -15,7 +16,7 @@ contract ClaimRegistryProxyTest is Test {
     address newImplAddress;
 
     function setUp() public {
-        ClaimRegistryUpgradeable impl = new ClaimRegistryUpgradeable();
+        ClaimRegistryUpgradeableOld impl = new ClaimRegistryUpgradeableOld();
         _implementation = address(impl);
         proxy = new ERC1967Proxy(address(impl), "");
         registry = ClaimRegistryUpgradeable(address(proxy));
