@@ -206,4 +206,22 @@ contract ClaimActionUpgradeable is
         uint256 amount = IERC20(eureTokenAddress).balanceOf(address(this));
         IERC20(eureTokenAddress).transfer(forwardingAddress, amount);
     }
+
+    /// @notice Set and change the forwarding address.
+	/// @param forwardingAddress address to which to forward the funds to.
+	function setForwardingAddress(address forwardingAddress) public {
+		forwardingAddresses[msg.sender] = forwardingAddress;
+	}
+
+	/// @notice Enable/disable balancer sandwich prevention
+	/// @param preventSandwiching true: sandwich prevention enabled in the balancer swap step
+	function changeBalancerSandwichPrevention(bool preventSandwiching) public onlyOwner {
+		balancerSandwichPrevention = preventSandwiching;
+	}
+
+	/// @notice Change the Maximal difference value in the curve swap sandwich prevention mechanism
+	/// @param maxDiffValue 1000 = only exact swaps oracle -> output EURe are ok. 995 = actual output can be 0.5% below oracle value
+	function changeCurveMaxDiffSandwichPrevention(uint256 maxDiffValue) public onlyOwner {
+		curveMaxDiff = maxDiffValue;
+	}
 }

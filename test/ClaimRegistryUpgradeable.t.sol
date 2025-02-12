@@ -23,6 +23,7 @@ contract ClaimRegistryUpgradeableTest is Test {
     address val1 = address(1);
     address val2 = address(2);
     address val3 = address(3);
+    address safe = address(9);
 
     event UpdateConfig(
         address indexed user,
@@ -436,5 +437,27 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         registry.setActionContract(val1, address(0));
         assertEq(registry.actionContract(address(1)), address(0));
+    }
+
+    function test_ClaimWithAction() public {
+        mockDeposit.fund(10, 1 ether);
+        test_RegisterWithAction();
+        _claimWithBatchAssertions(10);
+        
+        // The address registered with an action should not be processed, there should still be 1 claimable address left
+        assertEq(1, registry.getClaimableAddresses().length);
+
+        vm.prank(val1);
+        action.setForwardingAddress(address(safe));
+        _claimWithBatchAssertions(10);
+        
+        // GNO allowance is missing, there should still be 1 claimable address left
+        assertEq(1, registry.getClaimableAddresses().length);
+
+        vm.prank(val1);
+        mockDeposit.token().approve(address(action), 1 ether);
+        _claimWithBatchAssertions(10);
+        
+        assertEq(0, registry.getClaimableAddresses().length);
     }
 }
