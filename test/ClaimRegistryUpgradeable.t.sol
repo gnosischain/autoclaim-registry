@@ -24,7 +24,13 @@ contract ClaimRegistryUpgradeableTest is Test {
     address val2 = address(2);
     address val3 = address(3);
 
-    event UpdateConfig(address indexed user, uint256 oldTime, uint256 newTime, uint256 oldAmount, uint256 newAmount);
+    event UpdateConfig(
+        address indexed user,
+        uint256 oldTime,
+        uint256 newTime,
+        uint256 oldAmount,
+        uint256 newAmount
+    );
 
     function setUp() public {
         mockDeposit = new MockSBCDepositContract();
@@ -44,7 +50,10 @@ contract ClaimRegistryUpgradeableTest is Test {
         action = ClaimActionUpgradeable(address(proxyAction));
         action.initialize(address(registry));
 
-        assertEq(address(registry.depositContract()), address(_depositContractAddress));
+        assertEq(
+            address(registry.depositContract()),
+            address(_depositContractAddress)
+        );
         assertEq(registry.batchSizeMax(), BATCH_SIZE_MAX);
         assertEq(action.claimRegistryAddress(), address(registry));
 
@@ -53,26 +62,44 @@ contract ClaimRegistryUpgradeableTest is Test {
     }
 
     function test_InitialValidatorsLength() public {
-        assertEq(registry.getValidatorsLength(), 0, "Initial validators length should be 0");
+        assertEq(
+            registry.getValidatorsLength(),
+            0,
+            "Initial validators length should be 0"
+        );
     }
 
     function test_ValidatorsLengthAfterAdding() public {
         registry.register(val1, 1, 1, address(0));
-        assertEq(registry.getValidatorsLength(), 1, "Validators length should be 1 after adding a validator");
+        assertEq(
+            registry.getValidatorsLength(),
+            1,
+            "Validators length should be 1 after adding a validator"
+        );
     }
 
     function test_IsConfigActiveWhenActive() public {
         registry.register(val1, 1, 1, address(0));
-        assertTrue(registry.isConfigActive(address(1)), "Config should be active");
+        assertTrue(
+            registry.isConfigActive(address(1)),
+            "Config should be active"
+        );
     }
 
     function test_IsConfigActiveWhenNotActive() public {
-        assertFalse(registry.isConfigActive(address(2)), "Config should not be active");
+        assertFalse(
+            registry.isConfigActive(address(2)),
+            "Config should not be active"
+        );
     }
 
     function test_SetBatchSizeMaxAsOwner() public {
         registry.setBatchSizeMax(500);
-        assertEq(registry.batchSizeMax(), 500, "Batch size max should be updated to 500");
+        assertEq(
+            registry.batchSizeMax(),
+            500,
+            "Batch size max should be updated to 500"
+        );
     }
 
     function testFail_SetBatchSizeMaxAsNonOwner() public {
@@ -89,7 +116,13 @@ contract ClaimRegistryUpgradeableTest is Test {
         registry.register(val1, timeThreshold, amountThreshold, address(0));
 
         // Check if the validator is registered
-        (uint256 idx,, uint256 registeredTimeThreshold, uint256 registeredAmountThreshold,) = registry.configs(val1);
+        (
+            uint256 idx,
+            ,
+            uint256 registeredTimeThreshold,
+            uint256 registeredAmountThreshold,
+
+        ) = registry.configs(val1);
         assertEq(registeredTimeThreshold, timeThreshold);
         assertEq(registeredAmountThreshold, amountThreshold);
         assertEq(idx, registry.getValidatorsLength() - 1);
@@ -108,15 +141,26 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         // Register a validator
         vm.prank(val1);
-        registry.register(val1, initialTimeThreshold, initialAmountThreshold, address(0));
+        registry.register(
+            val1,
+            initialTimeThreshold,
+            initialAmountThreshold,
+            address(0)
+        );
 
-        (uint256 oldIdx,,,,) = registry.configs(val1);
+        (uint256 oldIdx, , , , ) = registry.configs(val1);
         // Update the validator's configuration
         vm.prank(val1);
         registry.updateConfig(val1, newTimeThreshold, newAmountThreshold);
 
         // Check if the configuration is updated
-        (uint256 newIdx,, uint256 updatedTimeThreshold, uint256 updatedAmountThreshold,) = registry.configs(val1);
+        (
+            uint256 newIdx,
+            ,
+            uint256 updatedTimeThreshold,
+            uint256 updatedAmountThreshold,
+
+        ) = registry.configs(val1);
         assertEq(updatedTimeThreshold, newTimeThreshold);
         assertEq(updatedAmountThreshold, newAmountThreshold);
         assertEq(oldIdx, newIdx);
@@ -130,11 +174,22 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         // Register a validator
         vm.prank(val1);
-        registry.register(val1, initialTimeThreshold, initialAmountThreshold, address(0));
+        registry.register(
+            val1,
+            initialTimeThreshold,
+            initialAmountThreshold,
+            address(0)
+        );
 
         // Update the validator's configuration
         vm.expectEmit(true, true, true, true);
-        emit UpdateConfig(val1, initialTimeThreshold, newTimeThreshold, initialAmountThreshold, newAmountThreshold);
+        emit UpdateConfig(
+            val1,
+            initialTimeThreshold,
+            newTimeThreshold,
+            initialAmountThreshold,
+            newAmountThreshold
+        );
         vm.prank(val1);
         registry.updateConfig(val1, newTimeThreshold, newAmountThreshold);
     }
@@ -173,8 +228,12 @@ contract ClaimRegistryUpgradeableTest is Test {
         registry.unregister(val1);
 
         // Check if the validator is unregistered
-        (,,,, ClaimRegistryUpgradeable.ConfigStatus status) = registry.configs(val1);
-        assertEq(uint256(status), uint256(ClaimRegistryUpgradeable.ConfigStatus.INACTIVE));
+        (, , , , ClaimRegistryUpgradeable.ConfigStatus status) = registry
+            .configs(val1);
+        assertEq(
+            uint256(status),
+            uint256(ClaimRegistryUpgradeable.ConfigStatus.INACTIVE)
+        );
     }
 
     function test_ClaimBatchGasEstimation() public {
@@ -217,8 +276,7 @@ contract ClaimRegistryUpgradeableTest is Test {
         uint160 i = 1;
         // vm.expectRevert();
         for (uint160 j = 0; j < i; j += 1) {
-            try registry.claim(address(j)) {}
-            catch {
+            try registry.claim(address(j)) {} catch {
                 console.log("Out of Gas hit at address count: ", j);
                 break;
             }
@@ -319,12 +377,64 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         for (uint160 i = 0; i < accounts; i++) {
             vm.prank(address(i));
-            registry.register(address(i), timeThreshold, amountThreshold, address(0));
+            registry.register(
+                address(i),
+                timeThreshold,
+                amountThreshold,
+                address(0)
+            );
         }
         for (uint160 i = 0; i < accounts; i++) {
             vm.prank(address(i));
             registry.unregister(address(i));
             assertEq(registry.getValidatorsLength(), accounts - i - 1);
         }
+    }
+
+    // ------------------------------
+    // TESTS POST CLAIM ACTION LOGIC
+    // ------------------------------
+
+    function testFail_RegisterWithActionNotWhitelisted() public {
+        uint256 timeThreshold = 1 hours;
+        uint256 amountThreshold = 1 ether;
+
+        // Simulate successful registration
+        vm.prank(val1);
+        registry.register(
+            val1,
+            timeThreshold,
+            amountThreshold,
+            address(action)
+        );
+    }
+
+    function test_RegisterWithAction() public {
+        uint256 timeThreshold = 1 hours;
+        uint256 amountThreshold = 1 ether;
+
+        registry.setWhitelistedActionContract(address(action), true);
+
+        // Simulate successful registration
+        vm.prank(val1);
+        registry.register(
+            val1,
+            timeThreshold,
+            amountThreshold,
+            address(action)
+        );
+
+        assertEq(registry.actionContract(address(1)), address(action));
+    }
+
+    function test_UnregisterAction() public {
+        registry.setWhitelistedActionContract(address(action), true);
+
+        vm.prank(val1);
+        registry.setActionContract(val1, address(action));
+        assertEq(registry.actionContract(address(1)), address(action));
+
+        registry.setActionContract(val1, address(0));
+        assertEq(registry.actionContract(address(1)), address(0));
     }
 }

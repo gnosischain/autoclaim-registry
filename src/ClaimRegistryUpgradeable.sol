@@ -242,6 +242,8 @@ contract ClaimRegistryUpgradeable is
                 "Action contract not whitelisted"
             );
             actionContract[_withdrawalAddress] = _actionContract;
+        } else {
+            actionContract[_withdrawalAddress] = address(0);
         }
     }
 
