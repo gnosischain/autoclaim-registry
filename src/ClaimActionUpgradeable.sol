@@ -6,14 +6,14 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {console} from "forge-std/console.sol";
 
 contract ClaimActionUpgradeable is
     IClaimActionUpgradeable,
     UUPSUpgradeable,
     OwnableUpgradeable
 {
-    address private gnoTokenAddress =
-        0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb;
+    address public gnoTokenAddress;
     address private wxdaiTokenAddress =
         0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d;
     address private eureTokenAddress =
@@ -47,12 +47,17 @@ contract ClaimActionUpgradeable is
     /**
      * @dev Initializes the proxy contract, intended to be called only once.
      * @param _claimRegistryAddress Address of the claim registry contract.
+     * @param _gnoTokenAddress Address of the GNO token contract.
      */
-    function initialize(address _claimRegistryAddress) public initializer {
+    function initialize(
+        address _claimRegistryAddress,
+        address _gnoTokenAddress
+    ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
 
         claimRegistryAddress = _claimRegistryAddress;
+        gnoTokenAddress = _gnoTokenAddress;
     }
 
     /**
@@ -85,15 +90,19 @@ contract ClaimActionUpgradeable is
     /// @notice This is the main functionality. Which does everything (claim, swap and forward).
     /// @param claimAddress address for which to claim .
     function swapAndForward(address claimAddress, uint256 amount) private {
+        console.log("Start swap and forwad %s %s", claimAddress, amount);
         uint256 allowanceAmount = IERC20(gnoTokenAddress).allowance(
             claimAddress,
             address(this)
         );
+
         require(
             forwardingAddresses[claimAddress] != address(0),
             "No forwarding Address set for the claimAddress. Cannot forward the swapped funds."
         );
         require(amount > 0, "No Gno to claim. Revert.");
+        
+        console.log("Allowance amount: %s", allowanceAmount);
         require(
             allowanceAmount >= amount,
             "Approval amount too low, cannot transfer GNO to contract to do the swap."
@@ -104,19 +113,21 @@ contract ClaimActionUpgradeable is
             address(this),
             amount
         );
-        balancerSwapGnoToWxdai(amount);
 
-        uint256 wxdaiAmount = IERC20(wxdaiTokenAddress).balanceOf(
-            address(this)
-        );
-        curveSwapWxdaiEure(wxdaiAmount);
-        transferAllEureToDestination(forwardingAddresses[claimAddress]);
-        emit ClaimSwapAndForwarded(
-            amount,
-            wxdaiAmount,
-            claimAddress,
-            forwardingAddresses[claimAddress]
-        );
+        console.log("Finish swap and forwad");
+        // balancerSwapGnoToWxdai(amount);
+
+        // uint256 wxdaiAmount = IERC20(wxdaiTokenAddress).balanceOf(
+        //     address(this)
+        // );
+        // curveSwapWxdaiEure(wxdaiAmount);
+        // transferAllEureToDestination(forwardingAddresses[claimAddress]);
+        // emit ClaimSwapAndForwarded(
+        //     amount,
+        //     wxdaiAmount,
+        //     claimAddress,
+        //     forwardingAddresses[claimAddress]
+        // );
     }
 
     /// @notice First swap step from GNO to wxDAI using balancer.
@@ -208,20 +219,24 @@ contract ClaimActionUpgradeable is
     }
 
     /// @notice Set and change the forwarding address.
-	/// @param forwardingAddress address to which to forward the funds to.
-	function setForwardingAddress(address forwardingAddress) public {
-		forwardingAddresses[msg.sender] = forwardingAddress;
-	}
+    /// @param forwardingAddress address to which to forward the funds to.
+    function setForwardingAddress(address forwardingAddress) public {
+        forwardingAddresses[msg.sender] = forwardingAddress;
+    }
 
-	/// @notice Enable/disable balancer sandwich prevention
-	/// @param preventSandwiching true: sandwich prevention enabled in the balancer swap step
-	function changeBalancerSandwichPrevention(bool preventSandwiching) public onlyOwner {
-		balancerSandwichPrevention = preventSandwiching;
-	}
+    /// @notice Enable/disable balancer sandwich prevention
+    /// @param preventSandwiching true: sandwich prevention enabled in the balancer swap step
+    function changeBalancerSandwichPrevention(
+        bool preventSandwiching
+    ) public onlyOwner {
+        balancerSandwichPrevention = preventSandwiching;
+    }
 
-	/// @notice Change the Maximal difference value in the curve swap sandwich prevention mechanism
-	/// @param maxDiffValue 1000 = only exact swaps oracle -> output EURe are ok. 995 = actual output can be 0.5% below oracle value
-	function changeCurveMaxDiffSandwichPrevention(uint256 maxDiffValue) public onlyOwner {
-		curveMaxDiff = maxDiffValue;
-	}
+    /// @notice Change the Maximal difference value in the curve swap sandwich prevention mechanism
+    /// @param maxDiffValue 1000 = only exact swaps oracle -> output EURe are ok. 995 = actual output can be 0.5% below oracle value
+    function changeCurveMaxDiffSandwichPrevention(
+        uint256 maxDiffValue
+    ) public onlyOwner {
+        curveMaxDiff = maxDiffValue;
+    }
 }

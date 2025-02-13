@@ -36,7 +36,6 @@ contract MockSBCDepositContract {
 }
 
 contract MockERC20 is ERC20 {
-    mapping(address => uint256) private balances;
 
     constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
 
