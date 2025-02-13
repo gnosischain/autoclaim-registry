@@ -24,10 +24,10 @@ contract MockSBCDepositContract {
     }
 
     function claimWithdrawal(address _address) external {
-        amounts[_address] = 0;
         if (amounts[_address] > 0) {
             token.transfer(_address, amounts[_address]);
         }
+        amounts[_address] = 0;
     }
 
     function withdrawableAmount(address _address) external view returns (uint256) {

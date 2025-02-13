@@ -8,6 +8,7 @@ import {ClaimRegistryUpgradeable} from "../src/ClaimRegistryUpgradeable.sol";
 import {ClaimActionUpgradeable} from "../src/ClaimActionUpgradeable.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {MockSBCDepositContract} from "./Mocks.sol";
+import {console} from "forge-std/console.sol";
 
 contract ClaimRegistryUpgradeableTest is Test {
     ClaimRegistryUpgradeable registry;
@@ -442,22 +443,26 @@ contract ClaimRegistryUpgradeableTest is Test {
     function test_ClaimWithAction() public {
         mockDeposit.fund(10, 1 ether);
         test_RegisterWithAction();
-        // _claimWithBatchAssertions(10);
-        
+        _claimWithBatchAssertions(10);
+
         // The address registered with an action should not be processed, there should still be 1 claimable address left
         // assertEq(1, registry.getClaimableAddresses().length);
 
-        vm.prank(val1);
+        vm.startPrank(val1);
         action.setForwardingAddress(address(safe));
         // _claimWithBatchAssertions(10);
-        
+
         // GNO allowance is missing, there should still be 1 claimable address left
         // assertEq(1, registry.getClaimableAddresses().length);
 
-        vm.prank(val1);
+        for (uint160 i = 0; i < 10; i++) {
+            console.log("Balances of %s: %s", address(i), mockDeposit.token().balanceOf(address(i)));
+        }
+
         mockDeposit.token().approve(address(action), 10 ether);
+        vm.stopPrank();
         _claimWithBatchAssertions(10);
-        
+
         assertEq(0, registry.getClaimableAddresses().length);
     }
 }
