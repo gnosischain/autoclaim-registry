@@ -13,8 +13,8 @@ contract MockSBCDepositContract {
     }
 
     function fund(uint256 _numberOfAddresses, uint256 _amount) external { 
-        token.mint(address(this), _amount);
-        for (uint160 i = 0; i < _numberOfAddresses; i++) {
+        token.mint(address(this), _numberOfAddresses *_amount);
+        for (uint160 i = 1; i <= _numberOfAddresses; i++) {
             _setWithdrawableAmount(address(i), _amount);
         }
     }

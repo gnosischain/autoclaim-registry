@@ -8,7 +8,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title ClaimRegistryLogic
@@ -356,9 +355,7 @@ contract ClaimRegistryUpgradeable is
     function claim(address withdrawalAddress) public {
         uint256 amount = depositContract.withdrawableAmount(withdrawalAddress);
         configs[withdrawalAddress].lastClaim = block.timestamp;
-        console.log("Amount to claim %s", amount);
         depositContract.claimWithdrawal(withdrawalAddress);
-        // console.log("Balance %s", depositContract.token().balanceOf(withdrawalAddress));
 
         address userActionContract = actionContract[withdrawalAddress];
         if (userActionContract != address(0)) {

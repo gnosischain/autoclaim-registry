@@ -291,7 +291,7 @@ contract ClaimRegistryUpgradeableTest is Test {
         vm.broadcast(val1);
         mockDeposit.fund(accounts, 2 ether);
 
-        for (uint160 i = 0; i < accounts; i++) {
+        for (uint160 i = 1; i <= accounts; i++) {
             vm.prank(address(i));
             registry.register(address(i), 1 hours, 1 ether, address(0));
         }
@@ -353,7 +353,7 @@ contract ClaimRegistryUpgradeableTest is Test {
     function test_ClaimMinDelay() public {
         mockDeposit.fund(10, 1 ether);
 
-        for (uint160 i = 0; i < 10; i++) {
+        for (uint160 i = 1; i <= 10; i++) {
             vm.prank(address(i));
             registry.register(address(i), 1 hours, 5 ether, address(0));
         }
