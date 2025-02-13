@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {console} from "forge-std/console.sol";
 
 contract ClaimActionUpgradeable is
     IClaimActionUpgradeable,
@@ -90,7 +89,6 @@ contract ClaimActionUpgradeable is
     /// @notice This is the main functionality. Which does everything (claim, swap and forward).
     /// @param claimAddress address for which to claim .
     function swapAndForward(address claimAddress, uint256 amount) private {
-        console.log("Start swap and forwad %s %s", claimAddress, amount);
         uint256 allowanceAmount = IERC20(gnoTokenAddress).allowance(
             claimAddress,
             address(this)
@@ -102,7 +100,6 @@ contract ClaimActionUpgradeable is
         );
         require(amount > 0, "No Gno to claim. Revert.");
         
-        console.log("Allowance amount: %s", allowanceAmount);
         require(
             allowanceAmount >= amount,
             "Approval amount too low, cannot transfer GNO to contract to do the swap."
@@ -114,20 +111,19 @@ contract ClaimActionUpgradeable is
             amount
         );
 
-        console.log("Finish swap and forwad");
-        // balancerSwapGnoToWxdai(amount);
+        balancerSwapGnoToWxdai(amount);
 
-        // uint256 wxdaiAmount = IERC20(wxdaiTokenAddress).balanceOf(
-        //     address(this)
-        // );
-        // curveSwapWxdaiEure(wxdaiAmount);
-        // transferAllEureToDestination(forwardingAddresses[claimAddress]);
-        // emit ClaimSwapAndForwarded(
-        //     amount,
-        //     wxdaiAmount,
-        //     claimAddress,
-        //     forwardingAddresses[claimAddress]
-        // );
+        uint256 wxdaiAmount = IERC20(wxdaiTokenAddress).balanceOf(
+            address(this)
+        );
+        curveSwapWxdaiEure(wxdaiAmount);
+        transferAllEureToDestination(forwardingAddresses[claimAddress]);
+        emit ClaimSwapAndForwarded(
+            amount,
+            wxdaiAmount,
+            claimAddress,
+            forwardingAddresses[claimAddress]
+        );
     }
 
     /// @notice First swap step from GNO to wxDAI using balancer.
