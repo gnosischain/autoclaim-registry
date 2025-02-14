@@ -79,6 +79,9 @@ contract ClaimActionUpgradeable is
         _disableInitializers();
     }
 
+    /// @notice Generic function, all action contract should implement it. Can be called only by the claim registry contract.
+    /// @param _withdrawalAddress Address for which to execute action.
+    /// @param _amount Amount claimed in registry contract.
     function executePostClaimAction(
         address _withdrawalAddress,
         uint256 _amount
@@ -86,7 +89,7 @@ contract ClaimActionUpgradeable is
         swapAndForward(_withdrawalAddress, _amount);
     }
 
-    /// @notice This is the main functionality. Which does everything (claim, swap and forward).
+    /// @notice This is the main functionality. Which does everything (swap and forward).
     /// @param claimAddress address for which to claim .
     function swapAndForward(address claimAddress, uint256 amount) private {
         uint256 allowanceAmount = IERC20(gnoTokenAddress).allowance(

@@ -232,6 +232,11 @@ contract ClaimRegistryUpgradeable is
         batchSizeMax = size;
     }
 
+    /**
+     * @dev Set an action contract for a withdrawal address.
+     * @param _withdrawalAddress The address to link to action contract.
+     * @param _actionContract The address of the action contract.
+     */
     function setActionContract(
         address _withdrawalAddress,
         address _actionContract
