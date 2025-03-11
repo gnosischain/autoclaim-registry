@@ -4,8 +4,15 @@ pragma solidity ^0.8.24;
 import "./interfaces/IClaimAction.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/v0.8/interfaces/AggregatorV3Interface.sol";
+
+
+
 
 contract ClaimAction is IClaimAction {
+    AggregatorV3Interface internal gnoUsdFeed;
+    AggregatorV3Interface internal eurUsdFeed;
+    
     address public gnoTokenAddress;
     address private wxdaiTokenAddress =
         0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d;
@@ -38,6 +45,14 @@ contract ClaimAction is IClaimAction {
     constructor(address _claimRegistryAddress, address _gnoTokenAddress) {
         claimRegistryAddress = _claimRegistryAddress;
         gnoTokenAddress = _gnoTokenAddress;
+
+        gnoUsdFeed = AggregatorV3Interface(
+            0x22441d81416430A54336aB28765abd31a792Ad37
+        );
+
+        eurUsdFeed = AggregatorV3Interface(
+            0xc91D87E81faB8f93699ECf7Ee9B44D11e1D53F0F
+        );
     }
 
     /// @notice Generic function, all action contract should implement it. Can be called only by the claim registry contract.
@@ -182,6 +197,30 @@ contract ClaimAction is IClaimAction {
     /// @param forwardingAddress address to which to forward the funds to.
     function setForwardingAddress(address forwardingAddress) public {
         forwardingAddresses[msg.sender] = forwardingAddress;
+    }
+
+    function getChainlinkGnoUsdDataFeedLatestAnswer() public view returns (int) {
+        // prettier-ignore
+        (
+            /* uint80 roundID */,
+            int answer,
+            /*uint startedAt*/,
+            /*uint timeStamp*/,
+            /*uint80 answeredInRound*/
+        ) = gnoUsdFeed.latestRoundData();
+        return answer;
+    }
+
+    function getChainlinkEurUsdDataFeedLatestAnswer() public view returns (int) {
+        // prettier-ignore
+        (
+            /* uint80 roundID */,
+            int answer,
+            /*uint startedAt*/,
+            /*uint timeStamp*/,
+            /*uint80 answeredInRound*/
+        ) = eurUsdFeed.latestRoundData();
+        return answer;
     }
 
     /// @notice Enable/disable balancer sandwich prevention
