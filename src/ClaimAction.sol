@@ -92,7 +92,7 @@ contract ClaimAction is IClaimAction {
         curveSwapWxdaiEure(wxdaiAmount);
         uint256 eureAmount = IERC20(eureTokenAddress).balanceOf(address(this));
         uint256 chainlinkPrice = chainlinkGnoEurPrice();
-        uint256 expectedEure = (amount * 1e18) / chainlinkPrice;
+        uint256 expectedEure = (amount * chainlinkPrice) / 1e18;
         require(
             eureAmount * 100 >= expectedEure * 99,
             "Slippage is more than 1%"
