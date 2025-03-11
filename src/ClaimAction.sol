@@ -1,17 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "./interfaces/IClaimActionUpgradeable.sol";
+import "./interfaces/IClaimAction.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract ClaimActionUpgradeable is
-    IClaimActionUpgradeable,
-    UUPSUpgradeable,
-    OwnableUpgradeable
-{
+contract ClaimAction is IClaimAction {
     address public gnoTokenAddress;
     address private wxdaiTokenAddress =
         0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d;
@@ -41,42 +35,9 @@ contract ClaimActionUpgradeable is
         _;
     }
 
-    // Proxy initializing and upgrading
-
-    /**
-     * @dev Initializes the proxy contract, intended to be called only once.
-     * @param _claimRegistryAddress Address of the claim registry contract.
-     * @param _gnoTokenAddress Address of the GNO token contract.
-     */
-    function initialize(
-        address _claimRegistryAddress,
-        address _gnoTokenAddress
-    ) public initializer {
-        __Ownable_init(msg.sender);
-        __UUPSUpgradeable_init();
-
+    constructor(address _claimRegistryAddress, address _gnoTokenAddress) {
         claimRegistryAddress = _claimRegistryAddress;
         gnoTokenAddress = _gnoTokenAddress;
-    }
-
-    /**
-     * @dev Ensures that only owner can upgrade the implementation.
-     * @param newImplementation Address of the new implementation.
-     */
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyOwner {}
-
-    /**
-     * @dev Compliments the ERC1967 pattern make implementation address retrievable.
-     * @return address of implementation contract.
-     */
-    function implementation() public view returns (address) {
-        return ERC1967Utils.getImplementation();
-    }
-
-    constructor() {
-        _disableInitializers();
     }
 
     /// @notice Generic function, all action contract should implement it. Can be called only by the claim registry contract.
@@ -102,7 +63,7 @@ contract ClaimActionUpgradeable is
             "No forwarding Address set for the claimAddress. Cannot forward the swapped funds."
         );
         require(amount > 0, "No Gno to claim. Revert.");
-        
+
         require(
             allowanceAmount >= amount,
             "Approval amount too low, cannot transfer GNO to contract to do the swap."
@@ -225,17 +186,17 @@ contract ClaimActionUpgradeable is
 
     /// @notice Enable/disable balancer sandwich prevention
     /// @param preventSandwiching true: sandwich prevention enabled in the balancer swap step
-    function changeBalancerSandwichPrevention(
-        bool preventSandwiching
-    ) public onlyOwner {
-        balancerSandwichPrevention = preventSandwiching;
-    }
+    // function changeBalancerSandwichPrevention(
+    //     bool preventSandwiching
+    // ) public onlyOwner {
+    //     balancerSandwichPrevention = preventSandwiching;
+    // }
 
     /// @notice Change the Maximal difference value in the curve swap sandwich prevention mechanism
     /// @param maxDiffValue 1000 = only exact swaps oracle -> output EURe are ok. 995 = actual output can be 0.5% below oracle value
-    function changeCurveMaxDiffSandwichPrevention(
-        uint256 maxDiffValue
-    ) public onlyOwner {
-        curveMaxDiff = maxDiffValue;
-    }
+    // function changeCurveMaxDiffSandwichPrevention(
+    //     uint256 maxDiffValue
+    // ) public onlyOwner {
+    //     curveMaxDiff = maxDiffValue;
+    // }
 }

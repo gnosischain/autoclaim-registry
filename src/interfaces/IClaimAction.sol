@@ -74,7 +74,7 @@ interface IAsset {
     // solhint-disable-previous-line no-empty-blocks
 }
 
-interface IClaimActionUpgradeable {
+interface IClaimAction {
     function executePostClaimAction(
         address _withdrawalAddress,
         uint256 _amount

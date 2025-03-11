@@ -5,14 +5,14 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
 import {ClaimRegistryUpgradeable} from "../src/ClaimRegistryUpgradeable.sol";
-import {ClaimActionUpgradeable} from "../src/ClaimActionUpgradeable.sol";
+import {ClaimAction} from "../src/ClaimAction.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {MockSBCDepositContract} from "./Mocks.sol";
 import {console} from "forge-std/console.sol";
 
 contract ClaimRegistryUpgradeableTest is Test {
     ClaimRegistryUpgradeable registry;
-    ClaimActionUpgradeable action;
+    ClaimAction action;
 
     address _depositContractAddress;
     address _implementation;
@@ -45,12 +45,7 @@ contract ClaimRegistryUpgradeableTest is Test {
         registry = ClaimRegistryUpgradeable(address(proxyRegistry));
         registry.initialize(_depositContractAddress, BATCH_SIZE_MAX);
 
-        ClaimActionUpgradeable implAction = new ClaimActionUpgradeable();
-        _implementation = address(implAction);
-
-        ERC1967Proxy proxyAction = new ERC1967Proxy(_implementation, "");
-        action = ClaimActionUpgradeable(address(proxyAction));
-        action.initialize(address(registry), address(mockDeposit.token()));
+        action = new ClaimAction(address(registry), address(mockDeposit.token()));
 
         assertEq(
             address(registry.depositContract()),
