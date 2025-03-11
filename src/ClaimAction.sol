@@ -6,13 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/v0.8/interfaces/AggregatorV3Interface.sol";
 
-
-
-
 contract ClaimAction is IClaimAction {
     AggregatorV3Interface internal gnoUsdFeed;
     AggregatorV3Interface internal eurUsdFeed;
-    
+
     address public gnoTokenAddress;
     address private wxdaiTokenAddress =
         0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d;
@@ -22,9 +19,6 @@ contract ClaimAction is IClaimAction {
 
     mapping(address => address) forwardingAddresses;
     address public curvePool;
-
-    bool public balancerSandwichPrevention = true; // enable/disable sandich prevention for the balancer step
-    uint256 public curveMaxDiff = 990; // = 0.990 =1 % difference between oracle price and received: Sandwich Prevention.
 
     event ClaimSwapAndForwarded(
         uint256 gnoAmountIn,
@@ -96,6 +90,13 @@ contract ClaimAction is IClaimAction {
             address(this)
         );
         curveSwapWxdaiEure(wxdaiAmount);
+        uint256 eureAmount = IERC20(eureTokenAddress).balanceOf(address(this));
+        uint256 chainlinkPrice = chainlinkGnoEurPrice();
+        uint256 expectedEure = (amount * 1e18) / chainlinkPrice;
+        require(
+            eureAmount * 100 >= expectedEure * 99,
+            "Slippage is more than 1%"
+        );
         transferAllEureToDestination(forwardingAddresses[claimAddress]);
         emit ClaimSwapAndForwarded(
             amount,
@@ -111,20 +112,6 @@ contract ClaimAction is IClaimAction {
         address vaultAddress = 0xBA12222222228d8Ba445958a75a0704d566BF2C8;
         Balancer vaultContract = Balancer(vaultAddress);
         bytes32 poolId = 0x8189c4c96826d016a99986394103dfa9ae41e7ee0002000000000000000000aa;
-
-        // Poor mans in-block sandwich prevention. If the pool has been touched in the same block, revert.
-        // There is about 1 balancer transaction per 100 blocks, so it has a 1% chance to give a false positive.
-        if (balancerSandwichPrevention) {
-            (, , uint256 lastChangeBlock, ) = vaultContract.getPoolTokenInfo(
-                poolId,
-                IERC20(gnoTokenAddress)
-            );
-
-            require(
-                lastChangeBlock < block.number,
-                "Balancer pool has been used in this block already. Revert to prevent in-block sandwiching attacks."
-            );
-        }
 
         Balancer.SwapKind kind = Balancer.SwapKind.GIVEN_IN;
 
@@ -162,7 +149,6 @@ contract ClaimAction is IClaimAction {
     function curveSwapWxdaiEure(uint256 wxdaiAmount) private {
         address curveAddress = 0xE3FFF29d4DC930EBb787FeCd49Ee5963DADf60b6;
         Curve curveContract = Curve(curveAddress);
-        uint256 oraclePrice = curveContract.price_oracle(); // wxDAI you get for 1 EURe multiplied by 1e18
 
         uint256 minReceive = 0; // TODO: Can be sandwiched to oblivion.
         IERC20(wxdaiTokenAddress).approve(curveAddress, wxdaiAmount);
@@ -174,16 +160,6 @@ contract ClaimAction is IClaimAction {
             outTokenIndex,
             wxdaiAmount,
             minReceive
-        );
-        uint256 eureReceived = IERC20(eureTokenAddress).balanceOf(
-            address(this)
-        );
-        uint256 minimallyAcceptedEure = (wxdaiAmount / (oraclePrice / 1e15)) *
-            curveMaxDiff;
-
-        require(
-            eureReceived > minimallyAcceptedEure,
-            "EURe amount received lower than expected from the oracle price. Revert to prevent sandwiching attacks."
         );
     }
 
@@ -199,7 +175,18 @@ contract ClaimAction is IClaimAction {
         forwardingAddresses[msg.sender] = forwardingAddress;
     }
 
-    function getChainlinkGnoUsdDataFeedLatestAnswer() public view returns (int) {
+    function chainlinkGnoEurPrice() public view returns (uint256) {
+        uint256 gnoUsd = uint256(getChainlinkGnoUsdDataFeedLatestAnswer());
+        uint256 eurUsd = uint256(getChainlinkEurUsdDataFeedLatestAnswer());
+        require(eurUsd > 0, "EUR/USD feed is 0");
+        return (gnoUsd * 1e18) / eurUsd;
+    }
+
+    function getChainlinkGnoUsdDataFeedLatestAnswer()
+        public
+        view
+        returns (int)
+    {
         // prettier-ignore
         (
             /* uint80 roundID */,
@@ -211,7 +198,11 @@ contract ClaimAction is IClaimAction {
         return answer;
     }
 
-    function getChainlinkEurUsdDataFeedLatestAnswer() public view returns (int) {
+    function getChainlinkEurUsdDataFeedLatestAnswer()
+        public
+        view
+        returns (int)
+    {
         // prettier-ignore
         (
             /* uint80 roundID */,
@@ -222,20 +213,4 @@ contract ClaimAction is IClaimAction {
         ) = eurUsdFeed.latestRoundData();
         return answer;
     }
-
-    /// @notice Enable/disable balancer sandwich prevention
-    /// @param preventSandwiching true: sandwich prevention enabled in the balancer swap step
-    // function changeBalancerSandwichPrevention(
-    //     bool preventSandwiching
-    // ) public onlyOwner {
-    //     balancerSandwichPrevention = preventSandwiching;
-    // }
-
-    /// @notice Change the Maximal difference value in the curve swap sandwich prevention mechanism
-    /// @param maxDiffValue 1000 = only exact swaps oracle -> output EURe are ok. 995 = actual output can be 0.5% below oracle value
-    // function changeCurveMaxDiffSandwichPrevention(
-    //     uint256 maxDiffValue
-    // ) public onlyOwner {
-    //     curveMaxDiff = maxDiffValue;
-    // }
 }
