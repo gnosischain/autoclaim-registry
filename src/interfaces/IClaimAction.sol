@@ -2,18 +2,6 @@
 pragma solidity ^0.8.21;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/// Minimal definition of some external contracts which I need to call
-
-contract NCTContract {
-    uint256 public feeRedeemDivider;
-    uint256 public feeRedeemPercentageInBase;
-}
-
-/// GBCDepositContractVariables is defined here as a contract to be able to access public variables
-contract GBCDepositContractVariables {
-    mapping(address => uint256) public withdrawableAmount;
-}
-
 interface Curve {
     // some interfaces claim the i and j input to be int128, but they are uint256
     function exchange_underlying(
