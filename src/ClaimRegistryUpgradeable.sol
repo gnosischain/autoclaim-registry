@@ -57,14 +57,6 @@ contract ClaimRegistryUpgradeable is
     event ClaimFailed(address indexed withdrawalAddress, string reason);
 
     // Modifiers
-    modifier nonZeroAmount(uint256 _amountThreshold) {
-        require(
-            _amountThreshold > 0,
-            "Amount should be non-zero"
-        );
-        _;
-    }
-
     modifier minTimeThreshold(uint256 _timeThreshold) {
         require(
             _timeThreshold >= 1 days,
@@ -271,7 +263,6 @@ contract ClaimRegistryUpgradeable is
         address _actionContract
     )
         public
-        nonZeroAmount(_amountThreshold)
         minTimeThreshold(_timeThreshold)
         ownerOrAdmin(_withdrawalAddress)
     {
@@ -304,7 +295,6 @@ contract ClaimRegistryUpgradeable is
         uint256 _amountThreshold
     )
         public
-        nonZeroAmount(_amountThreshold)
         minTimeThreshold(_timeThreshold)
         ownerOrAdmin(_withdrawalAddress)
         configActive(_withdrawalAddress)

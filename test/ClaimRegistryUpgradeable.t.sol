@@ -45,7 +45,10 @@ contract ClaimRegistryUpgradeableTest is Test {
         registry = ClaimRegistryUpgradeable(address(proxyRegistry));
         registry.initialize(_depositContractAddress, BATCH_SIZE_MAX);
 
-        action = new ClaimAction(address(registry), address(mockDeposit.token()));
+        action = new ClaimAction(
+            address(registry),
+            address(mockDeposit.token())
+        );
 
         assertEq(
             address(registry.depositContract()),
@@ -67,7 +70,7 @@ contract ClaimRegistryUpgradeableTest is Test {
     }
 
     function test_ValidatorsLengthAfterAdding() public {
-        registry.register(val1, 1, 1, address(0));
+        registry.register(val1, 1 days, 1, address(0));
         assertEq(
             registry.getValidatorsLength(),
             1,
@@ -76,7 +79,7 @@ contract ClaimRegistryUpgradeableTest is Test {
     }
 
     function test_IsConfigActiveWhenActive() public {
-        registry.register(val1, 1, 1, address(0));
+        registry.register(val1, 1 days, 1, address(0));
         assertTrue(
             registry.isConfigActive(address(1)),
             "Config should be active"
@@ -105,7 +108,7 @@ contract ClaimRegistryUpgradeableTest is Test {
     }
 
     function test_Register() public {
-        uint256 timeThreshold = 1 hours;
+        uint256 timeThreshold = 1 days;
         uint256 amountThreshold = 1 ether;
 
         // Simulate successful registration
@@ -131,9 +134,9 @@ contract ClaimRegistryUpgradeableTest is Test {
     }
 
     function test_UpdateConfig() public {
-        uint256 initialTimeThreshold = 1 hours;
+        uint256 initialTimeThreshold = 1 days;
         uint256 initialAmountThreshold = 1 ether;
-        uint256 newTimeThreshold = 2 hours;
+        uint256 newTimeThreshold = 2 days;
         uint256 newAmountThreshold = 2 ether;
 
         // Register a validator
@@ -164,9 +167,9 @@ contract ClaimRegistryUpgradeableTest is Test {
     }
 
     function test_UpdateConfigEvent() public {
-        uint256 initialTimeThreshold = 1 hours;
+        uint256 initialTimeThreshold = 1 days;
         uint256 initialAmountThreshold = 1 ether;
-        uint256 newTimeThreshold = 2 hours;
+        uint256 newTimeThreshold = 2 days;
         uint256 newAmountThreshold = 2 ether;
 
         // Register a validator
@@ -193,7 +196,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
     function testFail_UpdateConfigInvalidUser() public {
         // Attempt to update configuration as a non-registered user (should fail)
-        registry.updateConfig(val2, 1 hours, 1 ether);
+        registry.updateConfig(val2, 1 days, 1 ether);
     }
 
     // Tests nonZeroParams modifier
@@ -208,14 +211,14 @@ contract ClaimRegistryUpgradeableTest is Test {
 
     function testFail_RegisterTwice() public {
         vm.prank(val1);
-        registry.register(val1, 1 hours, 1 ether, address(0));
+        registry.register(val1, 1 days, 1 ether, address(0));
 
         // Attempt to register the same validator again (should fail)
-        registry.register(val1, 1 hours, 1 ether, address(0));
+        registry.register(val1, 1 days, 1 ether, address(0));
     }
 
     function test_Unregister() public {
-        uint256 timeThreshold = 1 hours;
+        uint256 timeThreshold = 1 days;
         uint256 amountThreshold = 1 ether;
 
         // Register and then unregister a validator
@@ -288,7 +291,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         for (uint160 i = 1; i <= accounts; i++) {
             vm.prank(address(i));
-            registry.register(address(i), 1 hours, 1 ether, address(0));
+            registry.register(address(i), 1 days, 1 ether, address(0));
         }
 
         _claimWithBatchAssertions(accounts);
@@ -350,7 +353,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
         for (uint160 i = 1; i <= 10; i++) {
             vm.prank(address(i));
-            registry.register(address(i), 1 hours, 5 ether, address(0));
+            registry.register(address(i), 1 days, 5 ether, address(0));
         }
 
         assertEq(10, registry.getClaimableAddresses().length);
@@ -369,7 +372,7 @@ contract ClaimRegistryUpgradeableTest is Test {
 
     function test_UnregisterValidatorsArrayShift() public {
         uint160 accounts = 100;
-        uint256 timeThreshold = 1 hours;
+        uint256 timeThreshold = 1 days;
         uint256 amountThreshold = 1 ether;
 
         for (uint160 i = 0; i < accounts; i++) {
@@ -393,7 +396,7 @@ contract ClaimRegistryUpgradeableTest is Test {
     // ------------------------------
 
     function testFail_RegisterWithActionNotWhitelisted() public {
-        uint256 timeThreshold = 1 hours;
+        uint256 timeThreshold = 1 days;
         uint256 amountThreshold = 1 ether;
 
         // Simulate successful registration
@@ -407,7 +410,7 @@ contract ClaimRegistryUpgradeableTest is Test {
     }
 
     function test_RegisterWithAction() public {
-        uint256 timeThreshold = 1 hours;
+        uint256 timeThreshold = 1 days;
         uint256 amountThreshold = 1 ether;
 
         registry.setWhitelistedActionContract(address(action), true);
@@ -438,6 +441,7 @@ contract ClaimRegistryUpgradeableTest is Test {
     function test_ClaimWithAction() public {
         mockDeposit.fund(10, 1 ether);
         test_RegisterWithAction();
+
         _claimWithBatchAssertions(10);
 
         // The address registered with an action should not be processed, there should still be 1 claimable address left
@@ -450,14 +454,19 @@ contract ClaimRegistryUpgradeableTest is Test {
         // GNO allowance is missing, there should still be 1 claimable address left
         assertEq(1, registry.getClaimableAddresses().length);
 
-        for (uint160 i = 0; i < 10; i++) {
-            console.log("Balances of %s: %s", address(i), mockDeposit.token().balanceOf(address(i)));
-        }
+        // for (uint160 i = 0; i < 10; i++) {
+        //     console.log("Balances of %s: %s", address(i), mockDeposit.token().balanceOf(address(i)));
+        // }
 
         vm.startPrank(val1);
         mockDeposit.token().approve(address(action), 10 ether);
         vm.stopPrank();
         _claimWithBatchAssertions(10);
+        
+        console.log(
+            "ClaimableAddresses",
+            registry.getClaimableAddresses().length
+        );
 
         assertEq(0, registry.getClaimableAddresses().length);
     }
