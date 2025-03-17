@@ -9,7 +9,7 @@ interface Curve {
         uint256 j,
         uint256 dx,
         uint256 min_dy
-    ) external;
+    ) external returns (uint256);
 
     function price_oracle() external returns (uint256);
 }
