@@ -178,7 +178,7 @@ contract ClaimAction is IClaimAction {
         uint256 gnoUsd = uint256(getChainlinkGnoUsdDataFeedLatestAnswer());
         uint256 eurUsd = uint256(getChainlinkEurUsdDataFeedLatestAnswer());
         require(eurUsd > 0, "EUR/USD feed is 0");
-        return (gnoUsd * 1e8) / eurUsd;
+        return (gnoUsd * 1e18) / eurUsd;
     }
 
     function getChainlinkGnoUsdDataFeedLatestAnswer()
@@ -189,11 +189,13 @@ contract ClaimAction is IClaimAction {
         // prettier-ignore
         (
             /* uint80 roundID */,
-            int answer,
+            int256 answer,
             /*uint startedAt*/,
-            /*uint timeStamp*/,
+            uint256 updatedAt,
             /*uint80 answeredInRound*/
         ) = gnoUsdFeed.latestRoundData();
+        require(answer > 0, "GNO/USD feed is 0");
+        require(block.timestamp - updatedAt < 1 days, "GNO/USD feed is up to date");
         return answer;
     }
 
@@ -205,11 +207,13 @@ contract ClaimAction is IClaimAction {
         // prettier-ignore
         (
             /* uint80 roundID */,
-            int answer,
+            int256 answer,
             /*uint startedAt*/,
-            /*uint timeStamp*/,
+            uint256 updatedAt,
             /*uint80 answeredInRound*/
         ) = eurUsdFeed.latestRoundData();
+        require(answer > 0, "EUR/USD feed is 0");
+        require(block.timestamp - updatedAt < 1 days, "EUR/USD feed is up to date");
         return answer;
     }
 }
