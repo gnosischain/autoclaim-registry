@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "./interfaces/IClaimActionUpgradeable.sol";
+import "./interfaces/IClaimAction.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/v0.8/interfaces/AggregatorV3Interface.sol";
 
-contract ClaimActionUpgradeable is
-    IClaimActionUpgradeable,
-    UUPSUpgradeable,
-    OwnableUpgradeable
-{
+contract ClaimAction is IClaimAction {
+    AggregatorV3Interface internal gnoUsdFeed;
+    AggregatorV3Interface internal eurUsdFeed;
+
     address public gnoTokenAddress;
     address private wxdaiTokenAddress =
         0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d;
@@ -21,9 +19,6 @@ contract ClaimActionUpgradeable is
 
     mapping(address => address) forwardingAddresses;
     address public curvePool;
-
-    bool public balancerSandwichPrevention = true; // enable/disable sandich prevention for the balancer step
-    uint256 public curveMaxDiff = 990; // = 0.990 =1 % difference between oracle price and received: Sandwich Prevention.
 
     event ClaimSwapAndForwarded(
         uint256 gnoAmountIn,
@@ -41,42 +36,17 @@ contract ClaimActionUpgradeable is
         _;
     }
 
-    // Proxy initializing and upgrading
-
-    /**
-     * @dev Initializes the proxy contract, intended to be called only once.
-     * @param _claimRegistryAddress Address of the claim registry contract.
-     * @param _gnoTokenAddress Address of the GNO token contract.
-     */
-    function initialize(
-        address _claimRegistryAddress,
-        address _gnoTokenAddress
-    ) public initializer {
-        __Ownable_init(msg.sender);
-        __UUPSUpgradeable_init();
-
+    constructor(address _claimRegistryAddress, address _gnoTokenAddress) {
         claimRegistryAddress = _claimRegistryAddress;
         gnoTokenAddress = _gnoTokenAddress;
-    }
 
-    /**
-     * @dev Ensures that only owner can upgrade the implementation.
-     * @param newImplementation Address of the new implementation.
-     */
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyOwner {}
+        gnoUsdFeed = AggregatorV3Interface(
+            0x22441d81416430A54336aB28765abd31a792Ad37
+        );
 
-    /**
-     * @dev Compliments the ERC1967 pattern make implementation address retrievable.
-     * @return address of implementation contract.
-     */
-    function implementation() public view returns (address) {
-        return ERC1967Utils.getImplementation();
-    }
-
-    constructor() {
-        _disableInitializers();
+        eurUsdFeed = AggregatorV3Interface(
+            0xc91D87E81faB8f93699ECf7Ee9B44D11e1D53F0F
+        );
     }
 
     /// @notice Generic function, all action contract should implement it. Can be called only by the claim registry contract.
@@ -102,7 +72,7 @@ contract ClaimActionUpgradeable is
             "No forwarding Address set for the claimAddress. Cannot forward the swapped funds."
         );
         require(amount > 0, "No Gno to claim. Revert.");
-        
+
         require(
             allowanceAmount >= amount,
             "Approval amount too low, cannot transfer GNO to contract to do the swap."
@@ -114,12 +84,14 @@ contract ClaimActionUpgradeable is
             amount
         );
 
-        balancerSwapGnoToWxdai(amount);
-
-        uint256 wxdaiAmount = IERC20(wxdaiTokenAddress).balanceOf(
-            address(this)
+        uint256 wxdaiAmount = balancerSwapGnoToWxdai(amount);
+        uint256 eureAmount = curveSwapWxdaiEure(wxdaiAmount);
+        uint256 chainlinkPrice = chainlinkGnoEurPrice();
+        uint256 expectedEure = (amount * chainlinkPrice) / 1e18;
+        require(
+            eureAmount * 100 >= expectedEure * 99,
+            "Slippage is more than 1%"
         );
-        curveSwapWxdaiEure(wxdaiAmount);
         transferAllEureToDestination(forwardingAddresses[claimAddress]);
         emit ClaimSwapAndForwarded(
             amount,
@@ -131,24 +103,10 @@ contract ClaimActionUpgradeable is
 
     /// @notice First swap step from GNO to wxDAI using balancer.
     /// @param gnoAmount amount of GNO to swap.
-    function balancerSwapGnoToWxdai(uint256 gnoAmount) private {
+    function balancerSwapGnoToWxdai(uint256 gnoAmount) private returns (uint256) {
         address vaultAddress = 0xBA12222222228d8Ba445958a75a0704d566BF2C8;
         Balancer vaultContract = Balancer(vaultAddress);
         bytes32 poolId = 0x8189c4c96826d016a99986394103dfa9ae41e7ee0002000000000000000000aa;
-
-        // Poor mans in-block sandwich prevention. If the pool has been touched in the same block, revert.
-        // There is about 1 balancer transaction per 100 blocks, so it has a 1% chance to give a false positive.
-        if (balancerSandwichPrevention) {
-            (, , uint256 lastChangeBlock, ) = vaultContract.getPoolTokenInfo(
-                poolId,
-                IERC20(gnoTokenAddress)
-            );
-
-            require(
-                lastChangeBlock < block.number,
-                "Balancer pool has been used in this block already. Revert to prevent in-block sandwiching attacks."
-            );
-        }
 
         Balancer.SwapKind kind = Balancer.SwapKind.GIVEN_IN;
 
@@ -173,42 +131,35 @@ contract ClaimActionUpgradeable is
         IERC20(gnoTokenAddress).approve(vaultAddress, gnoAmount);
 
         uint256 minReceive = 0;
-        vaultContract.swap(
+        uint256 wxdaiReceived = vaultContract.swap(
             singleSwapStruct,
             fundsManagementStruct,
             minReceive,
             block.timestamp
         );
+
+        return wxdaiReceived;
     }
 
     /// @notice Second swap step from wxDAI to EURe using curve.
     /// @param wxdaiAmount amount of wxDAI to swap.
-    function curveSwapWxdaiEure(uint256 wxdaiAmount) private {
+    function curveSwapWxdaiEure(uint256 wxdaiAmount) private returns (uint256) {
         address curveAddress = 0xE3FFF29d4DC930EBb787FeCd49Ee5963DADf60b6;
         Curve curveContract = Curve(curveAddress);
-        uint256 oraclePrice = curveContract.price_oracle(); // wxDAI you get for 1 EURe multiplied by 1e18
 
         uint256 minReceive = 0; // TODO: Can be sandwiched to oblivion.
         IERC20(wxdaiTokenAddress).approve(curveAddress, wxdaiAmount);
         // Pool tokens 0=EURe, 1=wxDAI, 2=USDC,3=USDT
         uint inTokenIndex = 1; // wxDAI
         uint outTokenIndex = 0; // EURe
-        curveContract.exchange_underlying(
+        uint256 eureReceived = curveContract.exchange_underlying(
             inTokenIndex,
             outTokenIndex,
             wxdaiAmount,
             minReceive
         );
-        uint256 eureReceived = IERC20(eureTokenAddress).balanceOf(
-            address(this)
-        );
-        uint256 minimallyAcceptedEure = (wxdaiAmount / (oraclePrice / 1e15)) *
-            curveMaxDiff;
 
-        require(
-            eureReceived > minimallyAcceptedEure,
-            "EURe amount received lower than expected from the oracle price. Revert to prevent sandwiching attacks."
-        );
+        return eureReceived;
     }
 
     /// @notice Transfer all the EURe in this contract to the destination address.
@@ -223,19 +174,46 @@ contract ClaimActionUpgradeable is
         forwardingAddresses[msg.sender] = forwardingAddress;
     }
 
-    /// @notice Enable/disable balancer sandwich prevention
-    /// @param preventSandwiching true: sandwich prevention enabled in the balancer swap step
-    function changeBalancerSandwichPrevention(
-        bool preventSandwiching
-    ) public onlyOwner {
-        balancerSandwichPrevention = preventSandwiching;
+    function chainlinkGnoEurPrice() public view returns (uint256) {
+        uint256 gnoUsd = uint256(getChainlinkGnoUsdDataFeedLatestAnswer());
+        uint256 eurUsd = uint256(getChainlinkEurUsdDataFeedLatestAnswer());
+        require(eurUsd > 0, "EUR/USD feed is 0");
+        return (gnoUsd * 1e18) / eurUsd;
     }
 
-    /// @notice Change the Maximal difference value in the curve swap sandwich prevention mechanism
-    /// @param maxDiffValue 1000 = only exact swaps oracle -> output EURe are ok. 995 = actual output can be 0.5% below oracle value
-    function changeCurveMaxDiffSandwichPrevention(
-        uint256 maxDiffValue
-    ) public onlyOwner {
-        curveMaxDiff = maxDiffValue;
+    function getChainlinkGnoUsdDataFeedLatestAnswer()
+        public
+        view
+        returns (int)
+    {
+        // prettier-ignore
+        (
+            /* uint80 roundID */,
+            int256 answer,
+            /*uint startedAt*/,
+            uint256 updatedAt,
+            /*uint80 answeredInRound*/
+        ) = gnoUsdFeed.latestRoundData();
+        require(answer > 0, "GNO/USD feed is 0");
+        require(block.timestamp - updatedAt < 1 days, "GNO/USD feed is up to date");
+        return answer;
+    }
+
+    function getChainlinkEurUsdDataFeedLatestAnswer()
+        public
+        view
+        returns (int)
+    {
+        // prettier-ignore
+        (
+            /* uint80 roundID */,
+            int256 answer,
+            /*uint startedAt*/,
+            uint256 updatedAt,
+            /*uint80 answeredInRound*/
+        ) = eurUsdFeed.latestRoundData();
+        require(answer > 0, "EUR/USD feed is 0");
+        require(block.timestamp - updatedAt < 1 days, "EUR/USD feed is up to date");
+        return answer;
     }
 }

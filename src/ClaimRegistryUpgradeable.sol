@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import "./interfaces/ISBCDepositContract.sol";
 import "./interfaces/IClaimRegistryUpgradeable.sol";
-import "./interfaces/IClaimActionUpgradeable.sol";
+import "./interfaces/IClaimAction.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -57,10 +57,10 @@ contract ClaimRegistryUpgradeable is
     event ClaimFailed(address indexed withdrawalAddress, string reason);
 
     // Modifiers
-    modifier nonZeroParams(uint256 _timeThreshold, uint256 _amountThreshold) {
+    modifier minTimeThreshold(uint256 _timeThreshold) {
         require(
-            _timeThreshold > 0 || _amountThreshold > 0,
-            "One of thresholds should be non-zero"
+            _timeThreshold >= 1 days,
+            "Time threshold must be at least 1 day"
         );
         _;
     }
@@ -194,8 +194,6 @@ contract ClaimRegistryUpgradeable is
         return claimableAddresses;
     }
 
-    // Public functions
-
     /**
      * @dev Gets the length of the validators array.
      * @return Length of the validators array.
@@ -265,7 +263,7 @@ contract ClaimRegistryUpgradeable is
         address _actionContract
     )
         public
-        nonZeroParams(_timeThreshold, _amountThreshold)
+        minTimeThreshold(_timeThreshold)
         ownerOrAdmin(_withdrawalAddress)
     {
         require(
@@ -297,7 +295,7 @@ contract ClaimRegistryUpgradeable is
         uint256 _amountThreshold
     )
         public
-        nonZeroParams(_timeThreshold, _amountThreshold)
+        minTimeThreshold(_timeThreshold)
         ownerOrAdmin(_withdrawalAddress)
         configActive(_withdrawalAddress)
     {
@@ -368,7 +366,7 @@ contract ClaimRegistryUpgradeable is
                 whitelistedActionContracts[userActionContract],
                 "Action contract not whitelisted"
             );
-            IClaimActionUpgradeable(userActionContract).executePostClaimAction(
+            IClaimAction(userActionContract).executePostClaimAction(
                 withdrawalAddress,
                 amount
             );
