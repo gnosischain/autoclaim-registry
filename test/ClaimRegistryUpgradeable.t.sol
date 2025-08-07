@@ -61,7 +61,7 @@ contract ClaimRegistryUpgradeableTest is Test {
         vm.warp(25 hours);
     }
 
-    function test_InitialValidatorsLength() public view {
+    function test_InitialValidatorsLength() public {
         assertEq(
             registry.getValidatorsLength(),
             0,
@@ -86,7 +86,7 @@ contract ClaimRegistryUpgradeableTest is Test {
         );
     }
 
-    function test_IsConfigActiveWhenNotActive() public view {
+    function test_IsConfigActiveWhenNotActive() public {
         assertFalse(
             registry.isConfigActive(address(2)),
             "Config should not be active"

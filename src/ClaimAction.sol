@@ -10,15 +10,14 @@ contract ClaimAction is IClaimAction {
     AggregatorV3Interface internal gnoUsdFeed;
     AggregatorV3Interface internal eurUsdFeed;
 
-    address public gnoTokenAddress;
+    address private gnoTokenAddress = 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb;
     address private wxdaiTokenAddress =
         0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d;
     address private eureTokenAddress =
         0xcB444e90D8198415266c6a2724b7900fb12FC56E;
     address public claimRegistryAddress;
 
-    mapping(address => address) forwardingAddresses;
-    address public curvePool;
+    mapping(address => address) public forwardingAddresses;
 
     event ClaimSwapAndForwarded(
         uint256 gnoAmountIn,
@@ -36,16 +35,15 @@ contract ClaimAction is IClaimAction {
         _;
     }
 
-    constructor(address _claimRegistryAddress, address _gnoTokenAddress) {
+    constructor(address _claimRegistryAddress) {
         claimRegistryAddress = _claimRegistryAddress;
-        gnoTokenAddress = _gnoTokenAddress;
 
         gnoUsdFeed = AggregatorV3Interface(
             0x22441d81416430A54336aB28765abd31a792Ad37
         );
 
         eurUsdFeed = AggregatorV3Interface(
-            0xc91D87E81faB8f93699ECf7Ee9B44D11e1D53F0F
+            0xab70BCB260073d036d1660201e9d5405F5829b7a
         );
     }
 
